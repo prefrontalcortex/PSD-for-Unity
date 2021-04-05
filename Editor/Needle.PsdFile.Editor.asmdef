@@ -1,0 +1,18 @@
+{
+    "name": "Needle.PsdFile.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b9b45bb934e52e94ba4ae0c70d70f248"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
