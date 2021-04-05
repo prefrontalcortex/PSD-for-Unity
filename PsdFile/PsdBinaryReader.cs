@@ -1,11 +1,10 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
-// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2013 Tao Yue
+//   Copyright (c) 2010-2020 Tao Yue
 //
 // Portions of this file are provided under the BSD 3-clause License:
 //   Copyright (c) 2006, Jonas Beckeman
@@ -29,10 +28,7 @@ namespace PhotoshopFile
     private BinaryReader reader;
     private Encoding encoding;
 
-    public Stream BaseStream
-    {
-      get { return reader.BaseStream; }
-    }
+    public Stream BaseStream => reader.BaseStream;
 
     public PsdBinaryReader(Stream stream, PsdBinaryReader reader)
       : this (stream, reader.encoding)
@@ -203,7 +199,9 @@ namespace PhotoshopFile
     {
       // Check to see if Dispose has already been called. 
       if (disposed)
+      {
         return;
+      }
 
       if (disposing)
       {

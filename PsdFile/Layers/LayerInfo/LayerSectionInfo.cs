@@ -1,11 +1,10 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
-// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2013 Tao Yue
+//   Copyright (c) 2010-2020 Tao Yue
 //
 // See LICENSE.txt for complete licensing and attribution information.
 //
@@ -34,29 +33,31 @@ namespace PhotoshopFile
   /// </summary>
   public class LayerSectionInfo : LayerInfo
   {
+    public override string Signature => "8BIM";
+
     private string key;
-    public override string Key
-    {
-      get { return key; }
-    }
+    public override string Key => key;
 
     public LayerSectionType SectionType { get; set; }
 
     private LayerSectionSubtype? subtype;
     public LayerSectionSubtype Subtype
     {
-      get { return subtype ?? LayerSectionSubtype.Normal; }
-      set { subtype = value; }
+      get => subtype ?? LayerSectionSubtype.Normal;
+      set => subtype = value;
     }
 
     private string blendModeKey;
     public string BlendModeKey
     {
-      get { return blendModeKey; }
+      get => blendModeKey;
       set
       {
         if (value.Length != 4)
-          throw new ArgumentException("Blend mode key must have a length of 4.");
+        {
+          throw new ArgumentException(
+            $"{nameof(BlendModeKey)} must be 4 characters in length.");
+        }
         blendModeKey = value;
       }
     }
@@ -73,7 +74,9 @@ namespace PhotoshopFile
       {
         var signature = reader.ReadAsciiChars(4);
         if (signature != "8BIM")
+        {
           throw new PsdInvalidException("Invalid section divider signature.");
+        }
 
         BlendModeKey = reader.ReadAsciiChars(4);
         if (dataLength >= 16)
@@ -91,7 +94,9 @@ namespace PhotoshopFile
         writer.WriteAsciiChars("8BIM");
         writer.WriteAsciiChars(BlendModeKey);
         if (subtype != null)
+        {
           writer.Write((Int32)Subtype);
+        }
       }
     }
   }
