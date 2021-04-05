@@ -1,10 +1,11 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
+// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2020 Tao Yue
+//   Copyright (c) 2010-2013 Tao Yue
 //
 // Portions of this file are provided under the BSD 3-clause License:
 //   Copyright (c) 2006, Jonas Beckeman
@@ -16,12 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
-
-using PhotoshopFile.Compression;
+using System.Text;
 using UnityEngine;
-using Debug = System.Diagnostics.Debug;
 
 namespace PhotoshopFile
 {
@@ -44,9 +45,7 @@ namespace PhotoshopFile
       foreach (var channel in this)
       {
         if (channel.ID >= 0)
-        {
           idArray[channel.ID] = channel;
-        }
       }
       return idArray;
     }
@@ -110,7 +109,7 @@ namespace PhotoshopFile
     /// <summary>
     /// Total length of the channel data, including compression headers.
     /// </summary>
-    public long Length { get; set; }
+    public int Length { get; set; }
 
     /// <summary>
     /// Raw image data for this color channel, in compressed on-disk format.
@@ -141,7 +140,7 @@ namespace PhotoshopFile
 
     //////////////////////////////////////////////////////////////////
 
-    public Channel(short id, Layer layer)
+    internal Channel(short id, Layer layer)
     {
       ID = id;
       Layer = layer;
@@ -149,52 +148,24 @@ namespace PhotoshopFile
 
     internal Channel(PsdBinaryReader reader, Layer layer)
     {
-      Util.DebugMessage(reader.BaseStream, "Load, Begin, Channel");
-        
       ID = reader.ReadInt16();
-      Length = (layer.PsdFile.IsLargeDocument)
-        ? reader.ReadInt64()
-        : reader.ReadInt32();
+      Length = reader.ReadInt32();
       Layer = layer;
-
-      Util.DebugMessage(reader.BaseStream, $"Load, End, Channel, {ID}");
     }
 
     internal void Save(PsdBinaryWriter writer)
     {
-      Util.DebugMessage(writer.BaseStream, "Save, Begin, Channel");
-
       writer.Write(ID);
-      if (Layer.PsdFile.IsLargeDocument)
-      {
-        writer.Write(Length);
-      }
-      else
-      {
-        writer.Write((Int32)Length);
-      }
-
-      Util.DebugMessage(writer.BaseStream, $"Save, End, Channel, {ID}");
+      writer.Write(Length);
     }
 
     //////////////////////////////////////////////////////////////////
 
     internal void LoadPixelData(PsdBinaryReader reader)
     {
-      Util.DebugMessage(reader.BaseStream, "Load, Begin, Channel image");
-
-      if (Length == 0)
-      {
-        ImageCompression = ImageCompression.Raw;
-        ImageDataRaw = new byte[0];
-        return;
-      }
-
       var endPosition = reader.BaseStream.Position + this.Length;
       ImageCompression = (ImageCompression)reader.ReadInt16();
-      var longDataLength = this.Length - 2;
-      Util.CheckByteArrayLength(longDataLength);
-      var dataLength = (int)longDataLength;
+      var dataLength = this.Length - 2;
 
       switch (ImageCompression)
       {
@@ -203,11 +174,8 @@ namespace PhotoshopFile
           break;
         case ImageCompression.Rle:
           // RLE row lengths
-          RleRowLengths = new RleRowLengths(reader, (int) Rect.y,
-            Layer.PsdFile.IsLargeDocument);
+          RleRowLengths = new RleRowLengths(reader, (int)Rect.height);
           var rleDataLength = (int)(endPosition - reader.BaseStream.Position);
-          Debug.Assert(rleDataLength == RleRowLengths.Total,
-            "RLE row lengths do not sum to length of channel image data.");
 
           // The PSD specification states that rows are padded to even sizes.
           // However, Photoshop doesn't actually do this.  RLE rows can have
@@ -220,9 +188,6 @@ namespace PhotoshopFile
           break;
       }
 
-      Util.DebugMessage(reader.BaseStream, $"Load, End, Channel image, {ID}");
-      Debug.Assert(reader.BaseStream.Position == endPosition,
-        "Pixel data was not fully read in.");
     }
 
     /// <summary>
@@ -231,18 +196,161 @@ namespace PhotoshopFile
     /// </summary>
     public void DecodeImageData()
     {
-      if ((ImageCompression == ImageCompression.Raw)
-        && (Layer.PsdFile.BitDepth <= 8))
-      {
+      if (this.ImageCompression == ImageCompression.Raw)
         ImageData = ImageDataRaw;
-        return;
-      }
+      else
+        DecompressImageData();
 
-      var image = ImageDataFactory.Create(this, ImageDataRaw);
-      var longLength = (long)image.BytesPerRow * (int) Rect.height;
-      Util.CheckByteArrayLength(longLength);
-      ImageData = new byte[longLength];
-      image.Read(ImageData);
+      // Rearrange the decompressed bytes into words, with native byte order.
+      if (ImageCompression == ImageCompression.ZipPrediction)
+        UnpredictImageData(Rect);
+      else
+        ReverseEndianness(ImageData, Rect);
+    }
+
+    private void DecompressImageData()
+    {
+      using (var stream = new MemoryStream(ImageDataRaw))
+      {
+        var bytesPerRow = Util.BytesPerRow(Rect, Layer.PsdFile.BitDepth);
+        var bytesTotal = (int)Rect.height * bytesPerRow;
+        ImageData = new byte[bytesTotal];
+
+        switch (this.ImageCompression)
+        {
+          case ImageCompression.Rle:
+            var rleReader = new RleReader(stream);
+            for (int i = 0; i < Rect.height; i++)
+            {
+              int rowIndex = i * bytesPerRow;
+              rleReader.Read(ImageData, rowIndex, bytesPerRow);
+            }
+            break;
+
+          case ImageCompression.Zip:
+          case ImageCompression.ZipPrediction:
+
+            // .NET implements Deflate (RFC 1951) but not zlib (RFC 1950),
+            // so we have to skip the first two bytes.
+            stream.ReadByte();
+            stream.ReadByte();
+
+            var deflateStream = new DeflateStream(stream, CompressionMode.Decompress);
+            var bytesDecompressed = deflateStream.Read(ImageData, 0, bytesTotal);
+            break;
+
+          default:
+            throw new PsdInvalidException("Unknown image compression method.");
+        }
+      }
+    }
+
+    private void ReverseEndianness(byte[] buffer, Rect rect)
+    {
+      var byteDepth = Util.BytesFromBitDepth(Layer.PsdFile.BitDepth);
+      int pixelsTotal = (int)(rect.width * rect.height);
+      if (pixelsTotal == 0)
+        return;
+
+      if (byteDepth == 2)
+      {
+        Util.SwapByteArray2(buffer, 0, pixelsTotal);
+      }
+      else if (byteDepth == 4)
+      {
+        Util.SwapByteArray4(buffer, 0, pixelsTotal);
+      }
+      else if (byteDepth > 1)
+      {
+        throw new NotImplementedException("Byte-swapping implemented only for 16-bit and 32-bit depths.");
+      }
+    }
+
+    /// <summary>
+    /// Unpredicts the raw decompressed image data into a little-endian
+    /// scanline bitmap.
+    /// </summary>
+    unsafe private void UnpredictImageData(Rect rect)
+    {
+      if (Layer.PsdFile.BitDepth == 16)
+      {
+        // 16-bitdepth images are delta-encoded word-by-word.  The deltas
+        // are thus big-endian and must be reversed for further processing.
+        ReverseEndianness(ImageData, rect);
+
+        fixed (byte* ptrData = &ImageData[0])
+        {
+          // Delta-decode each row
+          for (int iRow = 0; iRow < rect.height; iRow++)
+          {
+            UInt16* ptr = (UInt16*)(ptrData + iRow * (int)rect.width * 2);
+            UInt16* ptrEnd = (UInt16*)(ptrData + (iRow + 1) * (int)rect.width * 2);
+
+            // Start with column index 1 on each row
+            ptr++;
+            while (ptr < ptrEnd)
+            {
+              *ptr = (UInt16)(*ptr + *(ptr - 1));
+              ptr++;
+            }
+          }
+        }
+      }
+      else if (Layer.PsdFile.BitDepth == 32)
+      {
+        var reorderedData = new byte[ImageData.Length];
+        fixed (byte* ptrData = &ImageData[0]) 
+        {
+          // Delta-decode each row
+          for (int iRow = 0; iRow < rect.height; iRow++)
+          {
+            byte* ptr = ptrData + iRow * (int)rect.width * 4;
+            byte* ptrEnd = ptrData + (iRow + 1) * (int)rect.width * 4;
+
+            // Start with column index 1 on each row
+            ptr++;
+            while (ptr < ptrEnd)
+            {
+              *ptr = (byte)(*ptr + *(ptr - 1));
+              ptr++;
+            }
+          }
+
+          // Within each row, the individual bytes of the 32-bit words are
+          // packed together, high-order bytes before low-order bytes.
+          // We now unpack them into words and reverse to little-endian.
+          int offset1 = (int)rect.width;
+          int offset2 = 2 * offset1;
+          int offset3 = 3 * offset1;
+          fixed (byte* dstPtrData = &reorderedData[0])
+          {
+            for (int iRow = 0; iRow < rect.height; iRow++)
+            {
+              byte* dstPtr = dstPtrData + iRow * (int)rect.width * 4;
+              byte* dstPtrEnd = dstPtrData + (iRow + 1) * (int)rect.width * 4;
+
+              byte* srcPtr = ptrData + iRow * (int)rect.width * 4;
+
+              // Reverse to little-endian as we do the unpacking.
+              while (dstPtr < dstPtrEnd)
+              {
+                *(dstPtr++) = *(srcPtr + offset3);
+                *(dstPtr++) = *(srcPtr + offset2);
+                *(dstPtr++) = *(srcPtr + offset1);
+                *(dstPtr++) = *srcPtr;
+
+                srcPtr++;
+              }
+            }
+          }
+        }
+
+        ImageData = reorderedData;
+      }
+      else
+      {
+        throw new PsdInvalidException("ZIP with prediction is only available for 16 and 32 bit depths.");
+      }
     }
 
     /// <summary>
@@ -252,49 +360,52 @@ namespace PhotoshopFile
     {
       // Do not recompress if compressed data is already present.
       if (ImageDataRaw != null)
-      {
         return;
-      }
 
       if (ImageData == null)
-      {
         return;
-      }
 
-      if (ImageCompression == ImageCompression.Rle)
+      if (ImageCompression == ImageCompression.Raw)
       {
-        RleRowLengths = new RleRowLengths((int) Rect.y);
+        ImageDataRaw = ImageData;
+        this.Length = 2 + ImageDataRaw.Length;
       }
-
-      var compressor = ImageDataFactory.Create(this, null);
-      compressor.Write(ImageData);
-      ImageDataRaw = compressor.ReadCompressed();
-
-      Length = 2 + ImageDataRaw.Length;
-      if (ImageCompression == ImageCompression.Rle)
+      else if (ImageCompression == ImageCompression.Rle)
       {
-        var rowLengthSize = Layer.PsdFile.IsLargeDocument ? 4 : 2;
-        Length += rowLengthSize * (int) Rect.y;
+        RleRowLengths = new RleRowLengths((int)Rect.height);
+
+        using (var dataStream = new MemoryStream())
+        {
+          var rleWriter = new RleWriter(dataStream);
+          var bytesPerRow = Util.BytesPerRow(Rect, Layer.PsdFile.BitDepth);
+          for (int row = 0; row < Rect.height; row++)
+          {
+            int rowIndex = row * (int)Rect.width;
+            RleRowLengths[row] = rleWriter.Write(
+              ImageData, rowIndex, bytesPerRow);
+          }
+
+          // Save compressed data
+          dataStream.Flush();
+          ImageDataRaw = dataStream.ToArray();
+        }
+        Length = 2 + 2 * (int)Rect.height + ImageDataRaw.Length;
+      }
+      else
+      {
+        throw new NotImplementedException("Only raw and RLE compression have been implemented.");
       }
     }
 
     internal void SavePixelData(PsdBinaryWriter writer)
     {
-      Util.DebugMessage(writer.BaseStream, "Save, Begin, Channel image");
-
       writer.Write((short)ImageCompression);
       if (ImageDataRaw == null)
-      {
         return;
-      }
-
+      
       if (ImageCompression == PhotoshopFile.ImageCompression.Rle)
-      {
-        RleRowLengths.Write(writer, Layer.PsdFile.IsLargeDocument);
-      }
+        RleRowLengths.Write(writer);
       writer.Write(ImageDataRaw);
-
-      Util.DebugMessage(writer.BaseStream, $"Save, End, Channel image, {ID}");
     }
 
   }

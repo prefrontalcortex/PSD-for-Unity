@@ -1,10 +1,11 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
+// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2016 Tao Yue
+//   Copyright (c) 2010-2013 Tao Yue
 //
 // Portions of this file are provided under the BSD 3-clause License:
 //   Copyright (c) 2006, Jonas Beckeman
@@ -14,7 +15,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.Drawing;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -29,24 +29,21 @@ namespace PhotoshopFile
     private BinaryWriter writer;
     private Encoding encoding;
 
-    internal Stream BaseStream
+    public Stream BaseStream
     {
-      get
-      {
-        // Flush the writer so that the Stream.Position is correct.
-        Flush();
-        return writer.BaseStream;
-      }
+      get { return writer.BaseStream; }
     }
+
+    public bool AutoFlush { get; set; }
 
     public PsdBinaryWriter(Stream stream, Encoding encoding)
     {
       this.encoding = encoding;
 
-      // Specifying ASCII encoding will help catch any accidental calls to
-      // BinaryWriter.Write(String).  Since we do not own the Stream, the
-      // constructor is called with leaveOpen = true.
-      writer = new BinaryWriter(stream, Encoding.ASCII, true);
+      // BinaryWriter.Write(String) cannot be used, as it writes a UTF-7
+      // (variable-sized) length integer, while PSD strings have a fixed-size
+      // length field.  Encoding is set to ASCII to catch any accidental usage.
+      writer = new BinaryWriter(stream, Encoding.ASCII);
     }
 
     public void Flush()
@@ -56,10 +53,10 @@ namespace PhotoshopFile
 
     public void Write(Rect rect)
     {
-      Write((int) rect.yMin);
-      Write((int) rect.xMin);
-      Write((int) rect.yMax);
-      Write((int) rect.xMax);
+      Write((int)rect.yMin);
+      Write((int)rect.xMin);
+      Write((int)rect.yMax);
+      Write((int)rect.xMax);
     }
 
     /// <summary>
@@ -72,9 +69,10 @@ namespace PhotoshopFile
       var length = writer.BaseStream.Position - startPosition;
       var padBytes = Util.GetPadding((int)length, padMultiple);
       for (long i = 0; i < padBytes; i++)
-      {
         writer.Write((byte)0);
-      }
+
+      if (AutoFlush)
+        Flush();
     }
 
     /// <summary>
@@ -84,6 +82,9 @@ namespace PhotoshopFile
     {
       var bytes = Encoding.ASCII.GetBytes(s);
       writer.Write(bytes);
+
+      if (AutoFlush)
+        Flush();
     }
 
 
@@ -123,16 +124,25 @@ namespace PhotoshopFile
     public void Write(bool value)
     {
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(byte[] value)
     {
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(byte value)
     {
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(Int16 value)
@@ -142,6 +152,9 @@ namespace PhotoshopFile
         Util.SwapBytes2((byte*)&value);
       }
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(Int32 value)
@@ -151,6 +164,9 @@ namespace PhotoshopFile
         Util.SwapBytes4((byte*)&value);
       }
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(Int64 value)
@@ -160,6 +176,9 @@ namespace PhotoshopFile
         Util.SwapBytes((byte*)&value, 8);
       }
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(UInt16 value)
@@ -169,6 +188,9 @@ namespace PhotoshopFile
         Util.SwapBytes2((byte*)&value);
       }
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(UInt32 value)
@@ -178,6 +200,9 @@ namespace PhotoshopFile
         Util.SwapBytes4((byte*)&value);
       }
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
     public void Write(UInt64 value)
@@ -187,6 +212,9 @@ namespace PhotoshopFile
         Util.SwapBytes((byte*)&value, 8);
       }
       writer.Write(value);
+
+      if (AutoFlush)
+        Flush();
     }
 
 
@@ -206,16 +234,13 @@ namespace PhotoshopFile
     {
       // Check to see if Dispose has already been called. 
       if (disposed)
-      {
         return;
-      }
 
       if (disposing)
       {
         if (writer != null)
         {
-          // BinaryWriter.Dispose() is protected, so we have to call Close.
-          // The BinaryWriter will be automatically flushed on close.
+          // BinaryWriter.Dispose() is protected.
           writer.Close();
           writer = null;
         }

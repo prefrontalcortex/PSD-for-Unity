@@ -1,10 +1,11 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
+// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2017 Tao Yue
+//   Copyright (c) 2010-2012 Tao Yue
 //
 // See LICENSE.txt for complete licensing and attribution information.
 //
@@ -19,7 +20,10 @@ namespace PhotoshopFile
 {
   public class VersionInfo : ImageResource
   {
-    public override ResourceID ID => ResourceID.VersionInfo;
+    public override ResourceID ID
+    {
+      get { return ResourceID.VersionInfo; }
+    }
 
     public UInt32 Version { get; set; }
 

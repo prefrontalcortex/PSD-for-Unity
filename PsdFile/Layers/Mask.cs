@@ -1,10 +1,11 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
+// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2020 Tao Yue
+//   Copyright (c) 2010-2013 Tao Yue
 //
 // Portions of this file are provided under the BSD 3-clause License:
 //   Copyright (c) 2006, Jonas Beckeman
@@ -16,7 +17,6 @@
 using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using UnityEngine;
 
@@ -37,13 +37,11 @@ namespace PhotoshopFile
     private byte backgroundColor;
     public byte BackgroundColor
     {
-      get => backgroundColor;
+      get { return backgroundColor; }
       set
       {
         if ((value != 0) && (value != 255))
-        {
           throw new PsdInvalidException("Mask background must be fully-opaque or fully-transparent.");
-        }
         backgroundColor = value;
       }
     }
@@ -53,21 +51,21 @@ namespace PhotoshopFile
     private static int invertOnBlendBit = BitVector32.CreateMask(disabledBit);
 
     private BitVector32 flags;
-    public BitVector32 Flags => flags;
+    public BitVector32 Flags { get { return flags; } }
 
     /// <summary>
     /// If true, the position of the mask is relative to the layer.
     /// </summary>
     public bool PositionVsLayer
     {
-      get => flags[positionVsLayerBit];
-      set => flags[positionVsLayerBit] = value;
+      get { return flags[positionVsLayerBit]; }
+      set { flags[positionVsLayerBit] = value; }
     }
 
     public bool Disabled
     {
-      get => flags[disabledBit];
-      set => flags[disabledBit] = value;
+      get { return flags[disabledBit]; }
+      set { flags[disabledBit] = value; }
     }
 
     /// <summary>
@@ -75,8 +73,8 @@ namespace PhotoshopFile
     /// </summary>
     public bool InvertOnBlend
     {
-      get => flags[invertOnBlendBit];
-      set => flags[invertOnBlendBit] = value;
+      get { return flags[invertOnBlendBit]; }
+      set { flags[invertOnBlendBit] = value; }
     }
 
     /// <summary>
@@ -117,13 +115,9 @@ namespace PhotoshopFile
 
     public MaskInfo(PsdBinaryReader reader, Layer layer)
     {
-      Util.DebugMessage(reader.BaseStream, "Load, Begin, MaskInfo");
-
       var maskLength = reader.ReadUInt32();
       if (maskLength <= 0)
-      {
         return;
-      }
 
       var startPosition = reader.BaseStream.Position;
       var endPosition = startPosition + maskLength;
@@ -146,16 +140,12 @@ namespace PhotoshopFile
 
       // 20-byte mask data will end with padding.
       reader.BaseStream.Position = endPosition;
-
-      Util.DebugMessage(reader.BaseStream, "Load, End, MaskInfo");
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
     public void Save(PsdBinaryWriter writer)
     {
-      Util.DebugMessage(writer.BaseStream, "Save, Begin, MaskInfo");
-
       if (LayerMask == null)
       {
         writer.Write((UInt32)0);
@@ -180,8 +170,6 @@ namespace PhotoshopFile
           writer.Write(UserMask.Rect);
         }
       }
-
-      Util.DebugMessage(writer.BaseStream, "Save, End, MaskInfo");
     }
 
   }
