@@ -1,11 +1,10 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
-// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2013 Tao Yue
+//   Copyright (c) 2010-2020 Tao Yue
 //
 // See LICENSE.txt for complete licensing and attribution information.
 //
@@ -14,9 +13,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using Debug = System.Diagnostics.Debug;
 
 namespace PhotoshopFile
 {
@@ -31,6 +33,13 @@ namespace PhotoshopFile
       public int Right { get; set; }
     }
 
+    public static Rectangle IntersectWith(
+      this Rectangle thisRect, Rectangle rect)
+    {
+      thisRect.Intersect(rect);
+      return thisRect;
+    }
+
     /////////////////////////////////////////////////////////////////////////// 
 
     /// <summary>
@@ -41,6 +50,15 @@ namespace PhotoshopFile
       while (ptr < ptrEnd)
       {
         *ptr = value;
+        ptr++;
+      }
+    }
+
+    unsafe static public void Invert(byte* ptr, byte* ptrEnd)
+    {
+      while (ptr < ptrEnd)
+      {
+        *ptr = (byte)(*ptr ^ 0xff);
         ptr++;
       }
     }
@@ -88,6 +106,29 @@ namespace PhotoshopFile
 
     /////////////////////////////////////////////////////////////////////////// 
 
+    public static void SwapByteArray(int bitDepth,
+      byte[] byteArray, int startIdx, int count)
+    {
+      switch (bitDepth)
+      {
+        case 1:
+        case 8:
+          break;
+
+        case 16:
+          SwapByteArray2(byteArray, startIdx, count);
+          break;
+
+        case 32:
+          SwapByteArray4(byteArray, startIdx, count);
+          break;
+
+        default:
+          throw new Exception(
+            "Byte-swapping implemented only for 16-bit and 32-bit depths.");
+      }
+    }
+
     /// <summary>
     /// Reverses the endianness of 2-byte words in a byte array.
     /// </summary>
@@ -98,7 +139,9 @@ namespace PhotoshopFile
     {
       int endIdx = startIdx + count * 2;
       if (byteArray.Length < endIdx)
+      {
         throw new IndexOutOfRangeException();
+      }
 
       unsafe
       {
@@ -125,7 +168,9 @@ namespace PhotoshopFile
     {
       int endIdx = startIdx + count * 4;
       if (byteArray.Length < endIdx)
+      {
         throw new IndexOutOfRangeException();
+      }
 
       unsafe
       {
@@ -144,14 +189,21 @@ namespace PhotoshopFile
 
     /////////////////////////////////////////////////////////////////////////// 
 
-    public static int BytesPerRow(Rect rect, int depth)
+    /// <summary>
+    /// Calculates the number of bytes required to store a row of an image
+    /// with the specified bit depth.
+    /// </summary>
+    /// <param name="size">The size of the image in pixels.</param>
+    /// <param name="bitDepth">The bit depth of the image.</param>
+    /// <returns>The number of bytes needed to store a row of the image.</returns>
+    public static int BytesPerRow(Vector2 size, int bitDepth)
     {
-      switch (depth)
+      switch (bitDepth)
       {
         case 1:
-          return ((int)rect.width + 7) / 8;
+          return ((int) size.x + 7) / 8;
         default:
-          return (int)rect.width * BytesFromBitDepth(depth);
+          return (int) size.x * BytesFromBitDepth(bitDepth);
       }
     }
 
@@ -161,10 +213,15 @@ namespace PhotoshopFile
     public static int RoundUp(int value, int multiple)
     {
       if (value == 0)
+      {
         return 0;
+      }
 
       if (Math.Sign(value) != Math.Sign(multiple))
-        throw new ArgumentException("value and multiple cannot have opposite signs.");
+      {
+        throw new ArgumentException(
+          $"{nameof(value)} and {nameof(multiple)} cannot have opposite signs.");
+      }
 
       var remainder = value % multiple;
       if (remainder > 0)
@@ -180,16 +237,24 @@ namespace PhotoshopFile
     public static int GetPadding(int length, int padMultiple)
     {
       if ((length < 0) || (padMultiple < 0))
+      {
         throw new ArgumentException();
+      }
 
       var remainder = length % padMultiple;
       if (remainder == 0)
+      {
         return 0;
+      }
 
       var padding = padMultiple - remainder;
       return padding;
     }
 
+    /// <summary>
+    /// Returns the number of bytes needed to store a single pixel of the
+    /// specified bit depth.
+    /// </summary>
     public static int BytesFromBitDepth(int depth)
     {
       switch (depth)
@@ -234,13 +299,42 @@ namespace PhotoshopFile
     public static bool CheckBufferBounds(byte[] data, int offset, int count)
     {
       if (offset < 0)
+      {
         return false;
+      }
       if (count < 0)
+      {
         return false;
+      }
       if (offset + count > data.Length)
+      {
         return false;
+      }
 
       return true;
+    }
+
+    public static void CheckByteArrayLength(long length)
+    {
+      if (length < 0)
+      {
+        throw new Exception("Byte array cannot have a negative length.");
+      }
+      if (length > 0x7fffffc7)
+      {
+        throw new OutOfMemoryException(
+          "Byte array cannot exceed 2,147,483,591 in length.");
+      }
+    }
+
+    /// <summary>
+    /// Writes a message to the debug console, indicating the current position
+    /// in the stream in both decimal and hexadecimal formats.
+    /// </summary>
+    [Conditional("DEBUG")]
+    public static void DebugMessage(Stream stream, string message)
+    {
+      Debug.WriteLine($"0x{stream.Position:x}, {stream.Position}, {message}");
     }
   }
 
@@ -270,8 +364,14 @@ namespace PhotoshopFile
 
     public UFixed16_16(double value)
     {
-      if (value >= 65536.0) throw new OverflowException();
-      if (value < 0) throw new OverflowException();
+      if (value >= 65536.0)
+      {
+        throw new OverflowException();
+      }
+      if (value < 0)
+      {
+        throw new OverflowException();
+      }
 
       Integer = (UInt16)value;
 

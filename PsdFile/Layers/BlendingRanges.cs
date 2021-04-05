@@ -1,11 +1,10 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
-// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2013 Tao Yue
+//   Copyright (c) 2010-2020 Tao Yue
 //
 // Portions of this file are provided under the BSD 3-clause License:
 //   Copyright (c) 2006, Jonas Beckeman
@@ -41,21 +40,25 @@ namespace PhotoshopFile
 
     public BlendingRanges(PsdBinaryReader reader, Layer layer)
     {
-      Debug.WriteLine("BlendingRanges started at " + reader.BaseStream.Position.ToString(CultureInfo.InvariantCulture));
+      Util.DebugMessage(reader.BaseStream, "Load, Begin, BlendingRanges");
 
       Layer = layer;
       var dataLength = reader.ReadInt32();
       if (dataLength <= 0)
+      {
         return;
+      }
 
       Data = reader.ReadBytes(dataLength);
+
+      Util.DebugMessage(reader.BaseStream, "Load, End, BlendingRanges");
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
     public void Save(PsdBinaryWriter writer)
     {
-      Debug.WriteLine("BlendingRanges Save started at " + writer.BaseStream.Position.ToString(CultureInfo.InvariantCulture));
+      Util.DebugMessage(writer.BaseStream, "Save, Begin, BlendingRanges");
 
       if (Data == null)
       {
@@ -65,6 +68,8 @@ namespace PhotoshopFile
 
       writer.Write((UInt32)Data.Length);
       writer.Write(Data);
+
+      Util.DebugMessage(writer.BaseStream, "Save, End, BlendingRanges");
     }
   }
 }

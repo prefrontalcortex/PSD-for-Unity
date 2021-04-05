@@ -1,11 +1,10 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
-// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2013 Tao Yue
+//   Copyright (c) 2010-2020 Tao Yue
 //
 // Portions of this file are provided under the BSD 3-clause License:
 //   Copyright (c) 2006, Jonas Beckeman
@@ -67,12 +66,16 @@ namespace PhotoshopFile
     unsafe public int Write(byte[] data, int offset, int count)
     {
       if (!Util.CheckBufferBounds(data, offset, count))
+      {
         throw new ArgumentOutOfRangeException();
+      }
 
       // We cannot encode a count of 0, because the PackBits flag-counter byte
       // uses 0 to indicate a length of 1.
       if (count == 0)
-        throw new ArgumentOutOfRangeException("count");
+      {
+        throw new ArgumentOutOfRangeException(nameof(count));
+      }
 
       lock (rleLock)
       {
@@ -115,9 +118,13 @@ namespace PhotoshopFile
     private void WritePacket()
     {
       if (isRepeatPacket)
+      {
         WriteRepeatPacket(packetLength);
+      }
       else
+      {
         WriteLiteralPacket(packetLength);
+      }
     }
 
     private void StartPacket(int count,
@@ -161,9 +168,13 @@ namespace PhotoshopFile
         {
           isRepeatPacket = (value == runValue);
           if (isRepeatPacket)
+          {
             ExtendPacketAndRun(value);
+          }
           else
+          {
             ExtendPacketStartNewRun(value);
+          }
         }
         else if (packetLength == maxPacketLength)
         {
@@ -175,7 +186,9 @@ namespace PhotoshopFile
         {
           // Decide whether to continue the repeat packet.
           if (value == runValue)
+          {
             ExtendPacketAndRun(value);
+          }
           else
           {
             // Different color, so terminate the run and start a new packet.

@@ -1,11 +1,10 @@
 ﻿/////////////////////////////////////////////////////////////////////////////////
 //
 // Photoshop PSD FileType Plugin for Paint.NET
-// http://psdplugin.codeplex.com/
 //
 // This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
-//   Copyright (c) 2010-2013 Tao Yue
+//   Copyright (c) 2010-2020 Tao Yue
 //
 // Portions of this file are provided under the BSD 3-clause License:
 //   Copyright (c) 2006, Jonas Beckeman
@@ -20,6 +19,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+
+using static System.FormattableString;
 
 namespace PhotoshopFile
 {
@@ -113,11 +114,14 @@ namespace PhotoshopFile
     private string signature;
     public string Signature
     {
-      get { return signature; }
+      get => signature;
       set
       {
         if (value.Length != 4)
-          throw new ArgumentException("Signature must have length of 4");
+        {
+          throw new ArgumentException(
+            $"{nameof(Signature)} must be 4 characters in length.");
+        }
         signature = value;
       }
     }
@@ -137,6 +141,8 @@ namespace PhotoshopFile
     /// </summary>
     public void Save(PsdBinaryWriter writer)
     {
+      Util.DebugMessage(writer.BaseStream, "Save, Begin, ImageResource");
+
       writer.WriteAsciiChars(Signature);
       writer.Write((UInt16)ID);
       writer.WritePascalString(Name, 2);
@@ -148,6 +154,8 @@ namespace PhotoshopFile
         WriteData(writer);
       }
       writer.WritePadding(startPosition, 2);
+
+      Util.DebugMessage(writer.BaseStream, $"Save, End, ImageResource, {ID}");
     }
 
     /// <summary>
@@ -155,10 +163,8 @@ namespace PhotoshopFile
     /// </summary>
     protected abstract void WriteData(PsdBinaryWriter writer);
 
-    public override string ToString()
-    {
-      return String.Format(CultureInfo.InvariantCulture, "{0} {1}", (ResourceID)ID, Name);
-    }
+    public override string ToString() =>
+      Invariant($"{ID} {Name}");
   }
 
   /// <summary>
@@ -168,7 +174,7 @@ namespace PhotoshopFile
   {
     public static ImageResource CreateImageResource(PsdBinaryReader reader)
     {
-      // Debug.Print("ImageResource started at {0}", reader.BaseStream.Position);
+      Util.DebugMessage(reader.BaseStream, "Load, Begin, ImageResource");
 
       var signature = reader.ReadAsciiChars(4);
       var resourceIdInt = reader.ReadUInt16();
@@ -203,16 +209,23 @@ namespace PhotoshopFile
           break;
       }
 
+      Util.DebugMessage(reader.BaseStream,
+        $"Load, End, ImageResource, {resourceId}");
+
       // Reposition the reader if we do not consume the full resource block.
       // This takes care of the even-padding, and also preserves forward-
       // compatibility in case a resource block is later extended with
       // additional properties.
       if (reader.BaseStream.Position < endPosition)
+      {
         reader.BaseStream.Position = endPosition;
+      }
 
       // However, overruns are definitely an error.
       if (reader.BaseStream.Position > endPosition)
+      {
         throw new PsdInvalidException("Corruption detected in resource.");
+      }
 
       return resource;
     }
