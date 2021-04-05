@@ -203,7 +203,7 @@ namespace PhotoshopFile
           break;
         case ImageCompression.Rle:
           // RLE row lengths
-          RleRowLengths = new RleRowLengths(reader, (int) Rect.y,
+          RleRowLengths = new RleRowLengths(reader, (int) Rect.height,
             Layer.PsdFile.IsLargeDocument);
           var rleDataLength = (int)(endPosition - reader.BaseStream.Position);
           Debug.Assert(rleDataLength == RleRowLengths.Total,
@@ -263,18 +263,18 @@ namespace PhotoshopFile
 
       if (ImageCompression == ImageCompression.Rle)
       {
-        RleRowLengths = new RleRowLengths((int) Rect.y);
+        RleRowLengths = new RleRowLengths((int) Rect.height);
       }
 
-      var compressor = ImageDataFactory.Create(this, null);
-      compressor.Write(ImageData);
+      var compressor = ImageDataFactory.Create(this, ImageData);
+      // compressor.Write(ImageData);
       ImageDataRaw = compressor.ReadCompressed();
 
       Length = 2 + ImageDataRaw.Length;
       if (ImageCompression == ImageCompression.Rle)
       {
         var rowLengthSize = Layer.PsdFile.IsLargeDocument ? 4 : 2;
-        Length += rowLengthSize * (int) Rect.y;
+        Length += rowLengthSize * (int) Rect.height;
       }
     }
 

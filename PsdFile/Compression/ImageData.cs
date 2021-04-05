@@ -60,7 +60,7 @@ namespace PhotoshopFile.Compression
     /// <param name="array">An array containing the data to be compressed.</param>
     public void Write(byte[] array)
     {
-      var imageLength = (long)BytesPerRow * Size.y;
+      var imageLength = (long)BytesPerRow * (int) Size.y;
       if (array.Length != imageLength)
       {
         throw new ArgumentException(

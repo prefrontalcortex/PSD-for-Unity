@@ -185,7 +185,7 @@ namespace PhotoshopFile
       {
         if (!this.Channels.ContainsId(id))
         {
-          var size = (int) (this.Rect.y * this.Rect.x);
+          var size = (int) (this.Rect.width * this.Rect.height);
 
           var ch = new Channel(id, this);
           ch.ImageData = new byte[size];

@@ -165,11 +165,11 @@ namespace PhotoshopFile
     /// </summary>
     public int RowCount
     {
-      get => (int) this.BaseLayer.Rect.y;
+      get => (int) this.BaseLayer.Rect.height;
       set
       {
         CheckDimension(value);
-        BaseLayer.Rect = new Rect(0, 0, (int) BaseLayer.Rect.x, value);
+        BaseLayer.Rect = new Rect(0, 0, (int) BaseLayer.Rect.width, value);
       }
     }
 
@@ -179,11 +179,11 @@ namespace PhotoshopFile
     /// </summary>
     public int ColumnCount
     {
-      get => (int) this.BaseLayer.Rect.x;
+      get => (int) this.BaseLayer.Rect.width;
       set
       {
         CheckDimension(value);
-        BaseLayer.Rect = new Rect(0, 0, value, (int) BaseLayer.Rect.y);
+        BaseLayer.Rect = new Rect(0, 0, value, (int) BaseLayer.Rect.height);
       }
     }
 
