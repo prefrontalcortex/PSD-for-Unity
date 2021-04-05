@@ -120,7 +120,7 @@ namespace subjectnerdagreement.psdexport
 			if (!path.ToUpper().EndsWith(".PSD"))
 				return;
 
-			Psd = new PsdFile(path, new LoadContext() { Encoding = Encoding.Default });
+			Psd = new PsdFile(path, Encoding.Default);
 			Filename = Path.GetFileNameWithoutExtension(path);
 			Image = image;
 
