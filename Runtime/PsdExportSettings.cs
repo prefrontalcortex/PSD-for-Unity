@@ -1,10 +1,15 @@
+#if UNITY_EDITOR
+#define EDITOR_FUNCTIONS
+#endif
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using PhotoshopFile;
-using UnityEditor;
 using UnityEngine;
+#if EDITOR_FUNCTIONS
+using UnityEditor;
+#endif
 
 namespace subjectnerdagreement.psdexport
 {
@@ -13,6 +18,7 @@ namespace subjectnerdagreement.psdexport
 	/// </summary>
 	public class PsdExportSettings
 	{
+#if EDITOR_FUNCTIONS
 		private const string TagImport1 = "ImportX1";
 		private const string TagImport2 = "ImportX2";
 		private const string TagImport4 = "ImportX4";
@@ -21,7 +27,7 @@ namespace subjectnerdagreement.psdexport
 		private const string TagImportPack = "ImportPackTag|";
 		private const string TagExportPath = "ExportPath|";
 		private const string TagExportAuto = "ExportAuto";
-
+#endif
 		/// <summary>
 		/// Defines export settings for each layer
 		/// </summary>
@@ -114,10 +120,43 @@ namespace subjectnerdagreement.psdexport
 			}
 		}
 
+		/// <summary>
+		/// Setup the layer settings using a PsdFileInfo,
+		/// tries to read settings from file labels if available
+		/// </summary>
+		/// <param name="fileInfo"></param>
+		public void LoadLayers(PsdFileInfo fileInfo)
+		{
+			layerSettings = new Dictionary<int, LayerSetting>();
+			foreach (var layerIndex in fileInfo.LayerIndices)
+			{
+				string layerName = Psd.Layers[layerIndex].Name;
+				bool visible = fileInfo.LayerVisibility[layerIndex];
+				LoadLayerSetting(layerName, layerIndex, visible);
+			}
+		}
+
+		public PsdExportSettings(string path)
+		{
+			if (!path.ToUpper().EndsWith(".PSD", StringComparison.OrdinalIgnoreCase))
+				return;
+
+			Psd = new PsdFile(path, new LoadContext() { Encoding = Encoding.Default });
+			Filename = Path.GetFileNameWithoutExtension(path);
+			Image = null;
+
+			ScaleBy = 0;
+			Pivot = SpriteAlignment.Center;
+			PixelsToUnitSize = 100f;
+		}
+		
+		#region Editor
+
+#if EDITOR_FUNCTIONS
 		public PsdExportSettings(Texture2D image)
 		{
 			string path = AssetDatabase.GetAssetPath(image);
-			if (!path.ToUpper().EndsWith(".PSD"))
+			if (!path.ToUpper().EndsWith(".PSD", StringComparison.OrdinalIgnoreCase))
 				return;
 
 			Psd = new PsdFile(path, new LoadContext() { Encoding = Encoding.Default });
@@ -224,23 +263,8 @@ namespace subjectnerdagreement.psdexport
 			AssetDatabase.SetLabels(Image, labels);
 			AssetDatabase.Refresh();
 		}
-
-		/// <summary>
-		/// Setup the layer settings using a PsdFileInfo,
-		/// tries to read settings from file labels if available
-		/// </summary>
-		/// <param name="fileInfo"></param>
-		public void LoadLayers(PsdFileInfo fileInfo)
-		{
-			layerSettings = new Dictionary<int, LayerSetting>();
-			foreach (var layerIndex in fileInfo.LayerIndices)
-			{
-				string layerName = Psd.Layers[layerIndex].Name;
-				bool visible = fileInfo.LayerVisibility[layerIndex];
-				LoadLayerSetting(layerName, layerIndex, visible);
-			}
-		}
-
+#endif
+		
 		private void LoadLayerSetting(string layerName, int layerIndex, bool visible)
 		{
 			LayerSetting setting = new LayerSetting
@@ -251,6 +275,7 @@ namespace subjectnerdagreement.psdexport
 				scaleBy = PSDExporter.ScaleDown.Default
 			};
 
+#if EDITOR_FUNCTIONS
 			string layerPath = GetLayerPath(layerName);
 			Sprite layerSprite = (Sprite)AssetDatabase.LoadAssetAtPath(layerPath, typeof(Sprite));
 			if (layerSprite != null)
@@ -277,9 +302,12 @@ namespace subjectnerdagreement.psdexport
 
 				setting.pivot = (SpriteAlignment) importSetting.spriteAlignment;
 			} // End layer settings loading
-
+#endif
+			
 			layerSettings.Add(layerIndex, setting);
 		}
+		
+#if EDITOR_FUNCTIONS
 
 		public void SaveLayerMetaData()
 		{
@@ -356,5 +384,7 @@ namespace subjectnerdagreement.psdexport
 
 			return layerPath;
 		}
+#endif
+		#endregion
 	}
 }

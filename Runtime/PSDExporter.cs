@@ -1,9 +1,14 @@
-﻿using System.Collections.Generic;
+﻿#if UNITY_EDITOR
+#define EDITOR_FUNCTIONS
+#endif
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using PhotoshopFile;
 using UnityEngine;
+#if EDITOR_FUNCTIONS
 using UnityEditor;
+#endif
 using Object = UnityEngine.Object;
 
 namespace subjectnerdagreement.psdexport
@@ -43,6 +48,7 @@ namespace subjectnerdagreement.psdexport
 			return exportLayers.Count;
 		}
 
+#if EDITOR_FUNCTIONS
 		public static void Export(PsdExportSettings settings, PsdFileInfo fileInfo, bool exportExisting = true)
 		{
 			List<int> layerIndices = GetExportLayers(settings, fileInfo);
@@ -66,17 +72,25 @@ namespace subjectnerdagreement.psdexport
 
 				float progress = exportCount/(float) layerIndices.Count;
 
-				EditorUtility.DisplayProgressBar(fileString, infoString, progress);
+#if UNITY_EDITOR
+				UnityEditor.EditorUtility.DisplayProgressBar(fileString, infoString, progress);
+#endif
 				
 				CreateSprite(settings, layerIndex);
 				exportCount++;
 			}
 
-			EditorUtility.ClearProgressBar();
+#if UNITY_EDITOR
+			UnityEditor.EditorUtility.ClearProgressBar();
+#endif
+#if EDITOR_FUNCTIONS
 			settings.SaveMetaData();
 			settings.SaveLayerMetaData();
+#endif
 		}
+#endif
 
+#if EDITOR_FUNCTIONS
 		public static Sprite CreateSprite(PsdExportSettings settings, int layerIndex)
 		{
 			var layer = settings.Psd.Layers[layerIndex];
@@ -87,8 +101,9 @@ namespace subjectnerdagreement.psdexport
 			Object.DestroyImmediate(tex);
 			return sprite;
 		}
+#endif
 
-		private static Texture2D CreateTexture(Layer layer)
+		public static Texture2D CreateTexture(Layer layer)
 		{
 			if ((int)layer.Rect.width == 0 || (int)layer.Rect.height == 0)
 				return null;
@@ -138,11 +153,13 @@ namespace subjectnerdagreement.psdexport
 				layerName = layerName.Replace(invalidChar, '-');
 			}
 
+#if EDITOR_FUNCTIONS
 			layerName = settings.GetLayerPath(layerName);
-
+#endif
 			return layerName;
 		}
 
+#if EDITOR_FUNCTIONS
 		private static Sprite SaveAsset(PsdExportSettings settings, Texture2D tex, int layer)
 		{
 			string assetPath = GetLayerFilename(settings, layer);
@@ -212,6 +229,7 @@ namespace subjectnerdagreement.psdexport
 
 			return (Sprite)AssetDatabase.LoadAssetAtPath(assetPath, typeof(Sprite));
 		}
+#endif
 
 		private static Texture2D ScaleTextureByMipmap(Texture2D tex, int mipLevel)
 		{
