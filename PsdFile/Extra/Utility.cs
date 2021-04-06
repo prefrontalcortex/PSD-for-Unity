@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-
 public static class Utility
 {
     // TODO: In v4.0 codebase, turn this into an extension method

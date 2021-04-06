@@ -13,14 +13,9 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-using System;
 using System.IO;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
-
-// using System.Drawing;
-// using System.Drawing.Imaging;
 
 namespace PhotoshopFile
 {

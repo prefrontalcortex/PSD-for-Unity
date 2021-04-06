@@ -10,8 +10,6 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-using System;
-
 namespace PhotoshopFile.Compression
 {
   public class EndianReverser : ImageData

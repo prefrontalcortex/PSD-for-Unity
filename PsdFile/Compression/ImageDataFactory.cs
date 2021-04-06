@@ -10,9 +10,6 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-using System;
-using System.IO.Compression;
-using System.Drawing;
 using UnityEngine;
 
 namespace PhotoshopFile.Compression

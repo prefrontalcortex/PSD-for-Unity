@@ -10,15 +10,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////////
 
-using PaintDotNet;
-
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-// using System.Drawing;
-// using System.Drawing.Imaging;
-using System.Text;
-
 using PhotoshopFile;
 using UnityEngine;
 

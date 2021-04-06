@@ -15,9 +15,6 @@
 
 using System;
 using System.Collections.Specialized;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
 using UnityEngine;
 
 namespace PhotoshopFile

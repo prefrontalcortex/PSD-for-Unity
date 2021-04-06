@@ -11,8 +11,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 using System;
-// using System.Drawing;
-using System.IO.Compression;
 using UnityEngine;
 
 namespace PhotoshopFile.Compression
