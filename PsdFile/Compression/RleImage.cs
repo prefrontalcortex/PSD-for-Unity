@@ -2,7 +2,7 @@
 //
 // Photoshop PSD FileType Plugin for Paint.NET
 //
-// This software is ptortorovided under the MIT License:
+// This software is provided under the MIT License:
 //   Copyright (c) 2006-2007 Frank Blumenberg
 //   Copyright (c) 2010-2017 Tao Yue
 //
