@@ -27,7 +27,7 @@ namespace PhotoshopFile.Compression
     protected override bool AltersWrittenData => false;
 
     public RleImage(byte[] rleData, RleRowLengths rleRowLengths,
-      Vector2 size, int bitDepth)
+      Rect size, int bitDepth)
       : base(size, bitDepth)
     {
       this.rleData = rleData;
@@ -39,7 +39,7 @@ namespace PhotoshopFile.Compression
       var rleStream = new MemoryStream(rleData);
       var rleReader = new RleReader(rleStream);
       var bufferIndex = 0;
-      for (int i = 0; i < Size.y; i++)
+      for (int i = 0; i < (int) Size.height; i++)
       {
         var bytesRead = rleReader.Read(buffer, bufferIndex, BytesPerRow);
         if (bytesRead != BytesPerRow)
@@ -66,7 +66,7 @@ namespace PhotoshopFile.Compression
       using (var dataStream = new MemoryStream())
       {
         var rleWriter = new RleWriter(dataStream);
-        for (int row = 0; row < Size.y; row++)
+        for (int row = 0; row < (int) Size.height; row++)
         {
           int rowIndex = row * BytesPerRow;
           rleRowLengths[row] = rleWriter.Write(

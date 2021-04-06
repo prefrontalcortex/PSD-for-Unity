@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-// using PaintDotNet.Data.PhotoshopFileType;
+using PaintDotNet.Data.PhotoshopFileType;
 using PhotoshopFile;
 using UnityEngine;
 using Color = UnityEngine.Color;
@@ -22,7 +22,7 @@ public class CreatePsdTest : MonoBehaviour
         tex.SetPixels(Enumerable.Repeat(new Color(1, 0, 0, 1), tex.width * tex.height).ToArray());
         tex.Apply();
       
-        var psdFile = new PsdFile();
+        var psdFile = new PsdFile(PsdFileVersion.Psd);
         psdFile.BaseLayer = new Layer(psdFile);
         // file.BaseLayer.
 
@@ -79,9 +79,12 @@ public class CreatePsdTest : MonoBehaviour
         storeCompositeAction();
         storeLayersAction();
         
-        var output = new FileStream(Application.dataPath + "/../testfile.psd", FileMode.OpenOrCreate);
-        psdFile.PrepareSave();
-        psdFile.Save(output, Encoding.Default);
+        using(var output = new FileStream(Application.dataPath + "/../testfile.psd", FileMode.OpenOrCreate))
+        {
+          psdFile.PrepareSave();
+          psdFile.Save(output, Encoding.Default);
+          Debug.Log("File was saved");
+        }
     }
 
 
@@ -104,7 +107,7 @@ public class CreatePsdTest : MonoBehaviour
       psdLayer.BlendingRangesData = new BlendingRanges(psdLayer);
       
       // Store channel metadata
-      int layerSize = (int) (psdLayer.Rect.x * psdLayer.Rect.y);
+      int layerSize = (int) psdLayer.Rect.width * (int) psdLayer.Rect.height;
       for (int i = -1; i < 3; i++)
       {
         var ch = new Channel((short)i, psdLayer);
@@ -129,13 +132,13 @@ public class CreatePsdTest : MonoBehaviour
     {
       var colors = surface.GetPixels32();
       
-      for (int y = 0; y < rect.y; y++)
+      for (int y = 0; y < (int) rect.height; y++)
       {
-        int destRowIndex = y * (int) rect.x;
+        int destRowIndex = y * (int) rect.width;
         // ColorBgra* srcRow = surface.GetRowAddress(y + rect.Top);
         // ColorBgra* srcPixel = srcRow + rect.Left;
         
-        for (int x = 0; x < rect.x; x++)
+        for (int x = 0; x < (int) rect.width; x++)
         {
           int destIndex = destRowIndex + x;
           var srcPixel = colors[destIndex];

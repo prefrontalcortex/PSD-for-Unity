@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using PaintDotNet;
+using UnityEngine;
 
 public class BitmapLayer
 {
@@ -11,7 +12,7 @@ public class BitmapLayer
         
     }
 
-    public Rectangle Bounds { get; set; }
+    public Rect Bounds { get; set; }
     public Surface Surface { get; set; }
     public string Name { get; set; }
     public byte Opacity { get; set; }

@@ -169,7 +169,7 @@ namespace PhotoshopFile
       set
       {
         CheckDimension(value);
-        BaseLayer.Rect = new Rect(0, 0, (int) BaseLayer.Rect.width, value);
+        BaseLayer.Rect = new Rect(0, 0, BaseLayer.Rect.width, value);
       }
     }
 
@@ -183,7 +183,7 @@ namespace PhotoshopFile
       set
       {
         CheckDimension(value);
-        BaseLayer.Rect = new Rect(0, 0, value, (int) BaseLayer.Rect.height);
+        BaseLayer.Rect = new Rect(0, 0, value, BaseLayer.Rect.height);
       }
     }
 
@@ -810,7 +810,7 @@ namespace PhotoshopFile
         var channel = new Channel(i, this.BaseLayer);
         channel.ImageCompression = ImageCompression;
         channel.Length = this.RowCount
-          * Util.BytesPerRow(BaseLayer.Rect.size, BitDepth);
+          * Util.BytesPerRow(new Rect(Vector2.zero, BaseLayer.Rect.size), BitDepth);
 
         // The composite image stores all RLE headers up-front, rather than
         // with each channel.

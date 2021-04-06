@@ -15,11 +15,12 @@ using PaintDotNet;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
+// using System.Drawing;
+// using System.Drawing.Imaging;
 using System.Text;
 
 using PhotoshopFile;
+using UnityEngine;
 
 namespace PaintDotNet.Data.PhotoshopFileType
 {
@@ -34,11 +35,11 @@ namespace PaintDotNet.Data.PhotoshopFileType
       public PsdColorMode ColorMode { get; private set; }
       public byte[] ColorModeData { get; private set; }
 
-      public Rectangle Rectangle { get; private set; }
+      public Rect Rectangle { get; private set; }
       public MaskDecodeContext LayerMaskContext { get; private set; }
       public MaskDecodeContext UserMaskContext { get; private set; }
 
-      public DecodeContext(PhotoshopFile.Layer layer, Rectangle bounds)
+      public DecodeContext(PhotoshopFile.Layer layer, Rect bounds)
       {
         Layer = layer;
         ByteDepth = Util.BytesFromBitDepth(layer.PsdFile.BitDepth);
@@ -71,7 +72,7 @@ namespace PaintDotNet.Data.PhotoshopFileType
     private class MaskDecodeContext
     {
       public Mask Mask { get; private set; }
-      public Rectangle Rectangle { get; private set; }
+      public Rect Rectangle { get; private set; }
       public byte[] AlphaBuffer { get; private set; }
 
       public MaskDecodeContext(Mask mask, DecodeContext layerContext)
@@ -82,16 +83,16 @@ namespace PaintDotNet.Data.PhotoshopFileType
         // relative to the layer, but Photoshop treats the position as
         // absolute.  So that's what we do, too.
         Rectangle = mask.Rect.IntersectWith(layerContext.Rectangle);
-        AlphaBuffer = new byte[layerContext.Rectangle.Width];
+        AlphaBuffer = new byte[(int) layerContext.Rectangle.width];
       }
 
       public bool IsRowEmpty(int row)
       {
         return (Mask.ImageData == null)
           || (Mask.ImageData.Length == 0)
-          || (Rectangle.Size.IsEmpty)
-          || (row < Rectangle.Top)
-          || (row >= Rectangle.Bottom);
+          || (Rectangle.size.sqrMagnitude == 0)
+          || (row < Rectangle.yMin)
+          || (row >= Rectangle.yMax);
       }
     }
 
@@ -172,17 +173,17 @@ namespace PaintDotNet.Data.PhotoshopFileType
       // Convert rows from the Photoshop representation, writing the
       // resulting ARGB values to to the Paint.NET Surface.
 
-      for (int y = rect.Top; y < rect.Bottom; y++)
+      for (int y = (int) rect.yMin; y < (int) rect.yMax; y++)
       {
         // Calculate index into ImageData source from row and column.
-        int idxSrcPixel = (y - psdLayer.Rect.Top) * psdLayer.Rect.Width
-          + (rect.Left - psdLayer.Rect.Left);
+        int idxSrcPixel = (y - (int) psdLayer.Rect.yMin) * (int) psdLayer.Rect.width
+          + ((int) rect.xMin - (int) psdLayer.Rect.xMin);
         int idxSrcByte = idxSrcPixel * decodeContext.ByteDepth;
 
         // Calculate pointers to destination Surface.
         var pDestRow = surface.GetRowAddress(y);
-        var pDestStart = pDestRow + decodeContext.Rectangle.Left;
-        var pDestEnd = pDestRow + decodeContext.Rectangle.Right;
+        var pDestStart = pDestRow + (int) decodeContext.Rectangle.xMin;
+        var pDestEnd = pDestRow + (int) decodeContext.Rectangle.xMax;
 
         // For 16-bit images, take the higher-order byte from the image
         // data, which is now in little-endian order.
@@ -281,13 +282,13 @@ namespace PaintDotNet.Data.PhotoshopFileType
         pMaskData = &mask.ImageData[0])
       {
         // Get pointers to starting positions
-        int alphaColumn = maskContext.Rectangle.X - layerContext.Rectangle.X;
+        int alphaColumn = (int) maskContext.Rectangle.x - (int) layerContext.Rectangle.x;
         byte* pAlpha = pAlphaRow + alphaColumn;
-        byte* pAlphaEnd = pAlpha + maskContext.Rectangle.Width;
+        byte* pAlphaEnd = pAlpha + (int) maskContext.Rectangle.width;
 
-        int maskRow = y - maskContext.Mask.Rect.Y;
-        int maskColumn = maskContext.Rectangle.X - maskContext.Mask.Rect.X;
-        int idxMaskPixel = (maskRow * mask.Rect.Width) + maskColumn;
+        int maskRow = y - (int) maskContext.Mask.Rect.y;
+        int maskColumn = (int) maskContext.Rectangle.x - (int) maskContext.Mask.Rect.x;
+        int idxMaskPixel = (maskRow * (int) mask.Rect.width) + maskColumn;
         byte* pMask = pMaskData + idxMaskPixel * layerContext.ByteDepth;
 
         // Take the high-order byte if values are 16-bit (little-endian)

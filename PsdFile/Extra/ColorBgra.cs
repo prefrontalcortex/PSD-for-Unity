@@ -11,9 +11,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
+// using System.Drawing;
+// using System.Drawing.Drawing2D;
+// using System.Drawing.Imaging;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -194,19 +194,19 @@ namespace PaintDotNet
             }
         }
 
-        /// <summary>
-        /// Gets the equivalent GDI+ PixelFormat.
-        /// </summary>
-        /// <remarks>
-        /// This property always returns PixelFormat.Format32bppArgb.
-        /// </remarks>
-        public static PixelFormat PixelFormat
-        {
-            get
-            {
-                return PixelFormat.Format32bppArgb;
-            }
-        }
+        // /// <summary>
+        // /// Gets the equivalent GDI+ PixelFormat.
+        // /// </summary>
+        // /// <remarks>
+        // /// This property always returns PixelFormat.Format32bppArgb.
+        // /// </remarks>
+        // public static PixelFormat PixelFormat
+        // {
+        //     get
+        //     {
+        //         return PixelFormat.Format32bppArgb;
+        //     }
+        // }
 
         /// <summary>
         /// Returns a new ColorBgra with the same color values but with a new alpha component value.
@@ -333,18 +333,18 @@ namespace PaintDotNet
         /// <summary>
         /// Constructs a new ColorBgra instance from the values in the given Color instance.
         /// </summary>
-        public static ColorBgra FromColor(Color c)
-        {
-            return FromBgra(c.B, c.G, c.R, c.A);
-        }
-
-        /// <summary>
-        /// Converts this ColorBgra instance to a Color instance.
-        /// </summary>
-        public Color ToColor()
-        {
-            return Color.FromArgb(A, R, G, B);
-        }
+        // public static ColorBgra FromColor(Color c)
+        // {
+        //     return FromBgra(c.B, c.G, c.R, c.A);
+        // }
+        //
+        // /// <summary>
+        // /// Converts this ColorBgra instance to a Color instance.
+        // /// </summary>
+        // public Color ToColor()
+        // {
+        //     return Color.FromArgb(A, R, G, B);
+        // }
 
         /// <summary>
         /// Smoothly blends between two colors.

@@ -33,10 +33,11 @@ namespace PhotoshopFile
       public int Right { get; set; }
     }
 
-    public static Rectangle IntersectWith(
-      this Rectangle thisRect, Rectangle rect)
+    public static Rect IntersectWith(
+      this Rect thisRect, Rect rect)
     {
-      thisRect.Intersect(rect);
+      throw new System.NotImplementedException("TODO");
+      // thisRect.Intersect(rect);
       return thisRect;
     }
 
@@ -196,14 +197,14 @@ namespace PhotoshopFile
     /// <param name="size">The size of the image in pixels.</param>
     /// <param name="bitDepth">The bit depth of the image.</param>
     /// <returns>The number of bytes needed to store a row of the image.</returns>
-    public static int BytesPerRow(Vector2 size, int bitDepth)
+    public static int BytesPerRow(Rect size, int bitDepth)
     {
       switch (bitDepth)
       {
         case 1:
-          return ((int) size.x + 7) / 8;
+          return ((int) size.width + 7) / 8;
         default:
-          return (int) size.x * BytesFromBitDepth(bitDepth);
+          return (int) size.width * BytesFromBitDepth(bitDepth);
       }
     }
 

@@ -16,7 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
+// using System.Drawing;
 using System.Linq;
 
 using PhotoshopFile.Compression;
@@ -266,8 +266,8 @@ namespace PhotoshopFile
         RleRowLengths = new RleRowLengths((int) Rect.height);
       }
 
-      var compressor = ImageDataFactory.Create(this, ImageData);
-      // compressor.Write(ImageData);
+      var compressor = ImageDataFactory.Create(this, null);
+      compressor.Write(ImageData);
       ImageDataRaw = compressor.ReadCompressed();
 
       Length = 2 + ImageDataRaw.Length;

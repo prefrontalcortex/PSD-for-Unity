@@ -22,7 +22,7 @@ namespace PhotoshopFile.Compression
 
     protected override bool AltersWrittenData => false;
 
-    public RawImage(byte[] data, Vector2 size, int bitDepth)
+    public RawImage(byte[] data, Rect size, int bitDepth)
       : base(size, bitDepth)
     {
       this.data = data;

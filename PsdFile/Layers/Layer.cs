@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -185,7 +186,7 @@ namespace PhotoshopFile
       {
         if (!this.Channels.ContainsId(id))
         {
-          var size = (int) (this.Rect.width * this.Rect.height);
+          var size = (int) this.Rect.height * (int) this.Rect.width;
 
           var ch = new Channel(id, this);
           ch.ImageData = new byte[size];
@@ -284,9 +285,9 @@ namespace PhotoshopFile
       Util.DebugMessage(writer.BaseStream, $"Save, End, Layer, {Name}");
     }
 
-    // public static BitmapLayer CreateBackgroundLayer(int psdFileColumnCount, int psdFileRowCount)
-    // {
-    //   return new BitmapLayer(psdFileColumnCount, psdFileRowCount);
-    // }
+    public static BitmapLayer CreateBackgroundLayer(int psdFileColumnCount, int psdFileRowCount)
+    {
+      return new BitmapLayer(psdFileColumnCount, psdFileRowCount);
+    }
   }
 }

@@ -23,7 +23,7 @@ namespace PhotoshopFile.Compression
 
     protected override bool AltersWrittenData => true;
 
-    public ZipPredict16Image(byte[] zipData, Vector2 size)
+    public ZipPredict16Image(byte[] zipData, Rect size)
       : base(size, 16)
     {
       // 16-bitdepth images are delta-encoded word-by-word.  The deltas
@@ -75,10 +75,10 @@ namespace PhotoshopFile.Compression
     unsafe private void Predict(UInt16* ptrData)
     {
       // Delta-encode each row
-      for (int i = 0; i < Size.y; i++)
+      for (int i = 0; i < (int) Size.height; i++)
       {
         UInt16* ptrDataRow = ptrData;
-        UInt16* ptrDataRowEnd = ptrDataRow + (int) Size.x;
+        UInt16* ptrDataRowEnd = ptrDataRow + (int) Size.width;
 
         // Start with the last column in the row
         ptrData = ptrDataRowEnd - 1;
@@ -97,9 +97,9 @@ namespace PhotoshopFile.Compression
     unsafe private void Unpredict(UInt16* ptrData)
     {
       // Delta-decode each row
-      for (int i = 0; i < Size.y; i++)
+      for (int i = 0; i < (int) Size.height; i++)
       {
-        UInt16* ptrDataRowEnd = ptrData + (int) Size.x;
+        UInt16* ptrDataRowEnd = ptrData + (int) Size.width;
 
         // Start with column index 1 on each row
         ptrData++;

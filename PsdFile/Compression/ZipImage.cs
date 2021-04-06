@@ -25,7 +25,7 @@ namespace PhotoshopFile.Compression
 
     protected override bool AltersWrittenData => false;
 
-    public ZipImage(byte[] data, Vector2 size, int bitDepth)
+    public ZipImage(byte[] data, Rect size, int bitDepth)
       : base(size, bitDepth)
     {
       if (data == null)
@@ -73,7 +73,7 @@ namespace PhotoshopFile.Compression
 
     internal override void Read(byte[] buffer)
     {
-      var bytesToRead = (long)Size.y * BytesPerRow;
+      var bytesToRead = (long)Size.height * BytesPerRow;
       Util.CheckByteArrayLength(bytesToRead);
 
       var bytesRead = zipStream.Read(buffer, 0, (int)bytesToRead);
