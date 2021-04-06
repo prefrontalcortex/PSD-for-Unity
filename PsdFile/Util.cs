@@ -32,9 +32,12 @@ namespace PhotoshopFile
     public static Rect IntersectWith(
       this Rect thisRect, Rect rect)
     {
-      throw new System.NotImplementedException("TODO");
-      // thisRect.Intersect(rect);
-      return thisRect;
+      var result = new Rect
+      {
+        min = Vector2.Min(thisRect.min, rect.min), 
+        max = Vector2.Max(thisRect.max, rect.max)
+      };
+      return result;
     }
 
     /////////////////////////////////////////////////////////////////////////// 
