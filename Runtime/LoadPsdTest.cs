@@ -15,23 +15,8 @@ public class LoadPsdTest : MonoBehaviour
     void LoadNow()
     {
         var settings = new PsdExportSettings(absolutePath);
-        // var fileInfo = new PsdFileInfo(settings.Psd);
-        // settings.LoadLayers(fileInfo);
-        var psd = settings.Psd;
-        
-        // var layers = PSDExporter.GetExportLayers(settings, fileInfo);
-
-        // for (int i = psd.Layers.Count - 1; i >= 0; i--)
-        // {
-        //     Layer layer = psd.Layers[i];
-        //     
-        // }
-
-        file = new File { name = Path.GetFileNameWithoutExtension(absolutePath) };
-        Parse(psd);
-        
-        // write back
-        
+        file = Parse(settings.Psd);
+        file.name = Path.GetFileNameWithoutExtension(absolutePath);
     }
 
     [Serializable]
@@ -53,8 +38,9 @@ public class LoadPsdTest : MonoBehaviour
 
     public File file;
     
-    public void Parse(PsdFile psd)
+    public static File Parse(PsdFile psd)
     {
+	    var file = new File();
 	    LayerA current = file;
 		
 		// List<int> layerIndices = new List<int>();
@@ -137,5 +123,7 @@ public class LoadPsdTest : MonoBehaviour
 		// LayerIndices = layerIndices.ToArray();
 		//
 		// LayerGroups = layerGroups.ToArray();
-	}
+
+		return file;
+    }
 }

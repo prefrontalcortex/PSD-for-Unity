@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement style="flex-direction: row;">
+        <ui:Toggle name="visible" style="-unity-text-align: middle-left;" />
+        <ui:Label text="Label" display-tooltip-when-elided="true" name="name" style="width: 120px; -unity-text-align: middle-left; height: 64px;" />
+        <ui:VisualElement name="texture" style="height: 64px; width: 64px; flex-direction: row;" />
+    </ui:VisualElement>
+    <ui:Foldout text="Layers" style="margin-left: 25px;" />
+</ui:UXML>

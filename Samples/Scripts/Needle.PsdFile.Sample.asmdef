@@ -1,0 +1,20 @@
+{
+    "name": "Needle.PsdFile.Sample",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b9b45bb934e52e94ba4ae0c70d70f248",
+        "GUID:180bd8dff846c87459a5c2d3b5051f2b",
+        "GUID:dfd4dd069f777a943b33ee54f1a6a649",
+        "GUID:69f072ba8fc33de469fe24734c3f64fa",
+        "GUID:8c09aa1e4b73db04094be9d510142dd2"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
