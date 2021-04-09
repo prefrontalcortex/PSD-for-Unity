@@ -70,7 +70,7 @@ public class PsdPicker : MonoBehaviour
 				
 				parent.Add(item);
 
-				if (current.layers.Any())
+				if (layer.layers.Any())
 					AddLevels(layer, item.Q<Foldout>());
 				else
 					item.Q<Foldout>().style.display = DisplayStyle.None;
