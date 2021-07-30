@@ -15,6 +15,17 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.gkngkc.usfb",
+            "expression": "0.0.0",
+            "define": "HAVE_USFB"
+        },
+        {
+            "name": "com.unity.ui",
+            "expression": "1.0.0-preview.14",
+            "define": "HAVE_UI_TOOLKIT"
+        }
+    ],
     "noEngineReferences": false
 }

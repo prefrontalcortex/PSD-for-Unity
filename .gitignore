@@ -1,0 +1,9 @@
+﻿projects/*/.idea
+projects/*/Library
+projects/*/*.csproj
+projects/*/*.sln
+projects/*/UserSettings
+projects/*/Logs
+projects/*/Temp
+projects/*/UIElementsSchema
+projects/*/obj

@@ -4,14 +4,19 @@ using System.Linq;
 using subjectnerdagreement.psdexport;
 using UnityEngine;
 using UnityEngine.UIElements;
+#if HAVE_USFB
 using USFB;
+#endif
 
 public class PsdPicker : MonoBehaviour
 {
+#if HAVE_UI_TOOLKIT
 	public UIDocument picker;
 	public UIDocument fileRoot;
 	public VisualTreeAsset listItem;
-
+#endif
+	
+#if HAVE_USFB
 	private void OnEnable()
 	{
 		picker.rootVisualElement.Q<Button>().clicked += () =>
@@ -50,7 +55,9 @@ public class PsdPicker : MonoBehaviour
 			}
 		}
 	}
-
+#endif
+	
+#if HAVE_UI_TOOLKIT
 	void LoadPsdFile(string absolutePath)
 	{
 		var settings = new PsdExportSettings(absolutePath);
@@ -79,4 +86,5 @@ public class PsdPicker : MonoBehaviour
 
 		AddLevels(file, scrollView);
 	}
+#endif
 }

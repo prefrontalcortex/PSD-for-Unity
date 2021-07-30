@@ -20,9 +20,8 @@ public class LoadPsdTest : MonoBehaviour
     }
 
     [Serializable]
-    public class LayerA
+    public class LayerA : ScriptableObject
     {
-	    public string name;
 	    public bool visible;
 	    public bool isGroup;
 	    public Texture2D texture;
@@ -40,7 +39,7 @@ public class LoadPsdTest : MonoBehaviour
     
     public static File Parse(PsdFile psd)
     {
-	    var file = new File();
+	    var file = ScriptableObject.CreateInstance<File>();
 	    LayerA current = file;
 		
 		// List<int> layerIndices = new List<int>();
@@ -52,12 +51,10 @@ public class LoadPsdTest : MonoBehaviour
 		for (int i = psd.Layers.Count - 1; i >= 0; i--)
 		{
 			Layer layer = psd.Layers[i];
-			var layerA = new LayerA()
-			{
-				name = layer.Name,
-				layer = layer,
-				visible = layer.Visible
-			};
+			var layerA = ScriptableObject.CreateInstance<LayerA>();
+			layerA.name = layer.Name;
+			layerA.layer = layer;
+			layerA.visible = layer.Visible;
 
 			// layerVisibility.Add(layer.Visible);
 

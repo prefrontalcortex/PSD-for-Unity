@@ -8,7 +8,7 @@
       "url": "https://package.openupm.com"
     },
     "com.pfc.psd": {
-      "version": "file:../../../com.pfc.psd",
+      "version": "file:../../../package",
       "depth": 0,
       "source": "local",
       "dependencies": {}
