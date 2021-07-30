@@ -9,14 +9,19 @@ using UnityEngine;
 
 public class LoadPsdTest : MonoBehaviour
 {
+	public UnityEngine.Object asset;
     public string absolutePath;
     
     [ContextMenu("Load Now")]
     void LoadNow()
     {
-        var settings = new PsdExportSettings(absolutePath);
+	    var path = absolutePath;
+#if UNITY_EDITOR
+	    if (asset) path = UnityEditor.AssetDatabase.GetAssetPath(asset);
+#endif
+        var settings = new PsdExportSettings(path);
         file = Parse(settings.Psd);
-        file.name = Path.GetFileNameWithoutExtension(absolutePath);
+        file.name = Path.GetFileNameWithoutExtension(path);
     }
 
     [Serializable]
@@ -26,6 +31,8 @@ public class LoadPsdTest : MonoBehaviour
 	    public bool isGroup;
 	    public Texture2D texture;
 	    public Texture2D maskTexture;
+	    public Rect rect;
+	    public Rect maskRect;
 	    public LayerA parent;
 	    public Layer layer;
 	    public List<LayerA> layers = new List<LayerA>();
@@ -43,7 +50,7 @@ public class LoadPsdTest : MonoBehaviour
 	    var file = ScriptableObject.CreateInstance<File>();
 	    file.hideFlags = HideFlags.DontSave;
 	    LayerA current = file;
-		
+	    file.rect = new Rect(0, 0, psd.ColumnCount, psd.RowCount);
 		// List<int> layerIndices = new List<int>();
 		// List<PSDLayerGroupInfo> layerGroups = new List<PSDLayerGroupInfo>();
 		List<PSDLayerGroupInfo> openGroupStack = new List<PSDLayerGroupInfo>();
@@ -58,6 +65,8 @@ public class LoadPsdTest : MonoBehaviour
 			layerA.name = layer.Name;
 			layerA.layer = layer;
 			layerA.visible = layer.Visible;
+			layerA.rect = layer.Rect;
+			layerA.maskRect = layer.Masks.LayerMask?.Rect ?? Rect.zero;
 
 			// layerVisibility.Add(layer.Visible);
 
@@ -89,6 +98,7 @@ public class LoadPsdTest : MonoBehaviour
 				var group = layerA;
 				group.isGroup = true;
 				group.parent = current;
+				group.maskTexture = PSDExporter.CreateMaskTexture(layerA.layer);
 				current.layers.Add(group);
 				current = group;
 				// openGroupStack.Add(new PSDLayerGroupInfo(layer.Name, i, layer.Visible, isOpen));

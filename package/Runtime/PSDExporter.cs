@@ -146,8 +146,8 @@ namespace subjectnerdagreement.psdexport
 		
 		public static Texture2D CreateMaskTexture(Layer layer)
 		{
-			if ((int)layer.Rect.width == 0 || (int)layer.Rect.height == 0)
-				return null;
+			// if ((int)layer.Rect.width == 0 || (int)layer.Rect.height == 0)
+			// 	return null;
 
 			if (layer.Masks == null || layer.Masks.LayerMask == null) return null;
 			var layerMask = layer.Masks.LayerMask;
@@ -162,7 +162,7 @@ namespace subjectnerdagreement.psdexport
 			//int textureWidth = (int) layer.Rect.width;
 			//int textureHeight = (int) layer.Rect.height;
 
-			Texture2D tex = new Texture2D((int)layerMask.Rect.width, (int)layerMask.Rect.height, TextureFormat.R8, true);
+			Texture2D tex = new Texture2D((int)layerMask.Rect.width, (int)layerMask.Rect.height, TextureFormat.Alpha8, true);
 			Color32[] pixels = new Color32[tex.width * tex.height];
 
 			for (int i = 0; i < pixels.Length; i++)
@@ -177,7 +177,7 @@ namespace subjectnerdagreement.psdexport
 
 				int mod = i % tex.width;
 				int n = ((tex.width - mod - 1) + i) - mod;
-				pixels[pixels.Length - n - 1] = new Color32(r, 0, 0,0);
+				pixels[pixels.Length - n - 1] = new Color32(0, 0, 0,r);
 			}
 
 			tex.SetPixels32(pixels);
