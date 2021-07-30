@@ -437,7 +437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5424e6e93ab9bfb45ac6bc087aa51598, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  absolutePath: D:\git\needle-packages-master\development\PackagePlayground-2020.2\Assets\testfile.psd
+  absolutePath: Packages/com.pfc.psd-shared-assets/Assets/Import/LayersAndMasks.psd
   file: {fileID: 0}
 --- !u!4 &1770619959
 Transform:
