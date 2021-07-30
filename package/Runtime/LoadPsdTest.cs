@@ -40,6 +40,7 @@ public class LoadPsdTest : MonoBehaviour
     public static File Parse(PsdFile psd)
     {
 	    var file = ScriptableObject.CreateInstance<File>();
+	    file.hideFlags = HideFlags.DontSave;
 	    LayerA current = file;
 		
 		// List<int> layerIndices = new List<int>();
@@ -52,6 +53,7 @@ public class LoadPsdTest : MonoBehaviour
 		{
 			Layer layer = psd.Layers[i];
 			var layerA = ScriptableObject.CreateInstance<LayerA>();
+			layerA.hideFlags = HideFlags.DontSave;
 			layerA.name = layer.Name;
 			layerA.layer = layer;
 			layerA.visible = layer.Visible;
