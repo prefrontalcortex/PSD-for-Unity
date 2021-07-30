@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -131,14 +132,21 @@ public class CreatePsdTest : MonoBehaviour
       // store mask metadata
       if (mask)
       {
-        var layerMask = new Mask(psdLayer);
+        var layerMask = new Mask(psdLayer, new Rect(0,0, mask.width, mask.height), Byte.MaxValue, new BitVector32(16));
         var maskSize = mask.width * mask.height;
         psdLayer.Masks.LayerMask = layerMask;
-        layerMask.Rect = new Rect(0, 0, mask.width, mask.height);
+        // layerMask.Rect = new Rect(0, 0, mask.width, mask.height);
         layerMask.PositionVsLayer = true;
-        layerMask.ImageData = new byte[maskSize];
 
-        StoreMaskImage(layerMask, mask, new Rect(0,0, mask.width, mask.height)); 
+        var ch = new Channel((short)-2, psdLayer);
+        ch.ImageCompression = psdToken.RleCompress ? ImageCompression.Rle : ImageCompression.Raw;
+        ch.ImageData = new byte[maskSize];
+        psdLayer.Channels.Add(ch);
+        
+        layerMask.ImageData = ch.ImageData; 
+        // layerMask.BackgroundColor = Byte.MaxValue;
+
+        StoreMaskImage(ch, mask, new Rect(0,0, mask.width, mask.height)); 
       }
     }
     
@@ -178,7 +186,7 @@ public class CreatePsdTest : MonoBehaviour
       );
     }
 
-    unsafe private static void StoreMaskImage(Mask layerMask, Texture2D mask, Rect rect)
+    unsafe private static void StoreMaskImage(Channel maskChannel, Texture2D mask, Rect rect)
     {
       mask = MakeTextureReadable(mask, out var isCopy);
       var colors = mask.GetPixels32();
@@ -195,9 +203,11 @@ public class CreatePsdTest : MonoBehaviour
           int destIndex = destRowIndex + x;
           var srcPixel = colors[destIndex];
 
-          layerMask.ImageData[destIndex] = srcPixel.r;
+          maskChannel.ImageData[destIndex] = srcPixel.r;
         }
       }
+      
+      maskChannel.CompressImageData();
     }
     
     private static Texture2D MakeTextureReadable(Texture2D surface, out bool isCopy)

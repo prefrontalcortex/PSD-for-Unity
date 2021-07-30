@@ -352,6 +352,9 @@ MonoBehaviour:
     mask: {fileID: 2800000, guid: ff3d1bf82c827c04da92e0f76971490c, type: 3}
   - isGroup: 0
     texture: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
+    mask: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
+  - isGroup: 0
+    texture: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
     mask: {fileID: 0}
 --- !u!4 &1455252497
 Transform:
