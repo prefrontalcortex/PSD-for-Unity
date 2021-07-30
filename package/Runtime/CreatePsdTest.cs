@@ -5,13 +5,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PhotoshopFile;
+using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Color = UnityEngine.Color;
 
 public class CreatePsdTest : MonoBehaviour
 {
-    public List<Texture2D> layers = new List<Texture2D>();
+    [Serializable]
+    public class LayerData
+    {
+      public bool isGroup = false;
+      public Texture2D texture;
+      public Texture2D mask;
+    }
+    
+    public List<LayerData> layers = new List<LayerData>();
 
     [ContextMenu("Create File")]
     void CreateFile()
@@ -64,7 +73,7 @@ public class CreatePsdTest : MonoBehaviour
           var psdLayers = pdnLayers./*AsParallel().AsOrdered().*/Select(pdnLayer =>
           {
             var psdLayer = new PhotoshopFile.Layer(psdFile);
-            StoreLayer(pdnLayer, psdLayer, psdToken);
+            StoreLayer(pdnLayer.texture, pdnLayer.mask, psdLayer, psdToken);
 
             // progress.Notify(percentPerLayer);
             return psdLayer;
@@ -93,7 +102,7 @@ public class CreatePsdTest : MonoBehaviour
       public bool RleCompress { get; set; }
     }
 
-    public static void StoreLayer(Texture2D layer,
+    public static void StoreLayer(Texture2D layer, Texture2D mask,
       PhotoshopFile.Layer psdLayer, PsdSaveConfigToken psdToken)
     {
       // Set layer metadata
@@ -118,6 +127,19 @@ public class CreatePsdTest : MonoBehaviour
       // Store and compress channel image data
       var channelsArray = psdLayer.Channels.ToIdArray();
       StoreLayerImage(channelsArray, psdLayer.AlphaChannel, layer, psdLayer.Rect);
+      
+      // store mask metadata
+      if (mask)
+      {
+        var layerMask = new Mask(psdLayer);
+        var maskSize = mask.width * mask.height;
+        psdLayer.Masks.LayerMask = layerMask;
+        layerMask.Rect = new Rect(0, 0, mask.width, mask.height);
+        layerMask.PositionVsLayer = true;
+        layerMask.ImageData = new byte[maskSize];
+
+        StoreMaskImage(layerMask, mask, new Rect(0,0, mask.width, mask.height)); 
+      }
     }
     
     /// <summary>
@@ -156,6 +178,28 @@ public class CreatePsdTest : MonoBehaviour
       );
     }
 
+    unsafe private static void StoreMaskImage(Mask layerMask, Texture2D mask, Rect rect)
+    {
+      mask = MakeTextureReadable(mask, out var isCopy);
+      var colors = mask.GetPixels32();
+      if (isCopy) DestroyImmediate(mask);
+      
+      for (int y = 0; y < (int) rect.height; y++)
+      {
+        int destRowIndex = y * (int) rect.width;
+        // ColorBgra* srcRow = surface.GetRowAddress(y + rect.Top);
+        // ColorBgra* srcPixel = srcRow + rect.Left;
+        
+        for (int x = 0; x < (int) rect.width; x++)
+        {
+          int destIndex = destRowIndex + x;
+          var srcPixel = colors[destIndex];
+
+          layerMask.ImageData[destIndex] = srcPixel.r;
+        }
+      }
+    }
+    
     private static Texture2D MakeTextureReadable(Texture2D surface, out bool isCopy)
     {
       if (surface.isReadable)
