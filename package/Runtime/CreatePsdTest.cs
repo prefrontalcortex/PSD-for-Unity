@@ -6,13 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using PhotoshopFile;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using Color = UnityEngine.Color;
 
 public class CreatePsdTest : MonoBehaviour
 {
     public List<Texture2D> layers = new List<Texture2D>();
 
-    [ContextMenu("psd/Create File")]
+    [ContextMenu("Create File")]
     void CreateFile()
     {
         var tex = new Texture2D(1000, 1000);
@@ -75,12 +76,13 @@ public class CreatePsdTest : MonoBehaviour
         // Parallel.Invoke(storeCompositeAction, storeLayersAction);
         storeCompositeAction();
         storeLayersAction();
-        
-        using(var output = new FileStream(Application.dataPath + "/../testfile.psd", FileMode.OpenOrCreate))
+
+        var outputPath = Path.GetFullPath(Application.dataPath + "/../testfile.psd");
+        using(var output = new FileStream(outputPath, FileMode.OpenOrCreate))
         {
           psdFile.PrepareSave();
           psdFile.Save(output, Encoding.Default);
-          Debug.Log("File was saved");
+          Debug.Log("File was saved to <a href=\"" + outputPath + "\">" + outputPath + "</a>");
         }
     }
 
@@ -127,7 +129,9 @@ public class CreatePsdTest : MonoBehaviour
     /// <param name="rect">Image rectangle to store.</param>
     unsafe private static void StoreLayerImage(Channel[] channels, Channel alphaChannel, Texture2D surface, Rect rect)
     {
+      surface = MakeTextureReadable(surface, out var isCopy);
       var colors = surface.GetPixels32();
+      if (isCopy) DestroyImmediate(surface);
       
       for (int y = 0; y < (int) rect.height; y++)
       {
@@ -152,9 +156,32 @@ public class CreatePsdTest : MonoBehaviour
       );
     }
 
-    
-    
-    // [ContextMenu("psd/Load File")]
+    private static Texture2D MakeTextureReadable(Texture2D surface, out bool isCopy)
+    {
+      if (surface.isReadable)
+      {
+        isCopy = false;
+        return surface;
+      }
+      
+      var rt = new RenderTexture(surface.width, surface.height, 0, DefaultFormat.LDR);
+      rt.Create();
+      var active = RenderTexture.active;
+      RenderTexture.active = rt;
+      Graphics.Blit(surface, rt);
+      var newTex = new Texture2D(surface.width, surface.height, DefaultFormat.LDR, TextureCreationFlags.None);
+      newTex.ReadPixels(new Rect(0, 0, surface.width, surface.height), 0, 0);
+      newTex.Apply();
+      newTex.name = "--temp--";
+      newTex.hideFlags = HideFlags.DontSave;
+      RenderTexture.active = active;
+      rt.Release();
+      isCopy = true;
+      return newTex;
+    }
+
+
+    // [ContextMenu("Load File")]
     // void LoadFile()
     // {
     //     var input = new FileStream(Application.dataPath + "/../testfile.psd", FileMode.Open);
