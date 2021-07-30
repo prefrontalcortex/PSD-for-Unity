@@ -143,6 +143,48 @@ namespace subjectnerdagreement.psdexport
 
 			return tex;
 		}
+		
+		public static Texture2D CreateMaskTexture(Layer layer)
+		{
+			if ((int)layer.Rect.width == 0 || (int)layer.Rect.height == 0)
+				return null;
+
+			if (layer.Masks == null || layer.Masks.LayerMask == null) return null;
+			var layerMask = layer.Masks.LayerMask;
+
+			if (layerMask.Rect.width == 0 || layerMask.Rect.height == 0)
+				return null;
+			
+			// For possible clip to document functionality
+			//int fileWidth = psd.ColumnCount;
+			//int fileHeight = psd.RowCount;
+
+			//int textureWidth = (int) layer.Rect.width;
+			//int textureHeight = (int) layer.Rect.height;
+
+			Texture2D tex = new Texture2D((int)layerMask.Rect.width, (int)layerMask.Rect.height, TextureFormat.R8, true);
+			Color32[] pixels = new Color32[tex.width * tex.height];
+
+			for (int i = 0; i < pixels.Length; i++)
+			{
+				byte r = layerMask.ImageData[i];
+				// byte g = layerMask.ImageData[i];
+				// byte b = layerMask.ImageData[i];
+				// byte a = 255;
+
+				// if (alpha != null)
+				// 	a = alpha.ImageData[i];
+
+				int mod = i % tex.width;
+				int n = ((tex.width - mod - 1) + i) - mod;
+				pixels[pixels.Length - n - 1] = new Color32(r, 0, 0,0);
+			}
+
+			tex.SetPixels32(pixels);
+			tex.Apply();
+
+			return tex;
+		}
 
 		public static string GetLayerFilename(PsdExportSettings settings, int layerIndex)
 		{

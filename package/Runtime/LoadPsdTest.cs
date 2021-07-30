@@ -25,6 +25,7 @@ public class LoadPsdTest : MonoBehaviour
 	    public bool visible;
 	    public bool isGroup;
 	    public Texture2D texture;
+	    public Texture2D maskTexture;
 	    public LayerA parent;
 	    public Layer layer;
 	    public List<LayerA> layers = new List<LayerA>();
@@ -107,6 +108,7 @@ public class LoadPsdTest : MonoBehaviour
 			{
 				// Normal layer
 				layerA.texture = PSDExporter.CreateTexture(layerA.layer);
+				layerA.maskTexture = PSDExporter.CreateMaskTexture(layerA.layer);
 				current.layers.Add(layerA);
 				// look for instances	
 				// if (layer.Name.Contains(" Copy"))
