@@ -14,6 +14,7 @@ using System;
 
 namespace PhotoshopFile
 {
+  [Flags]
   public enum LayerSectionType
   {
     Layer = 0,
@@ -60,6 +61,12 @@ namespace PhotoshopFile
         }
         blendModeKey = value;
       }
+    }
+
+    public LayerSectionInfo(LayerSectionType sectionType)
+    {
+      SectionType = sectionType;
+      this.key = "lsct";
     }
 
     public LayerSectionInfo(PsdBinaryReader reader, string key, int dataLength)

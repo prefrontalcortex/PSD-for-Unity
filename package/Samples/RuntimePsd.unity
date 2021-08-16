@@ -472,19 +472,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cb22d781dd92e040a009b4314c6cbfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layers:
-  - isGroup: 0
-    texture: {fileID: 2800000, guid: ff3d1bf82c827c04da92e0f76971490c, type: 3}
-    mask: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
-  - isGroup: 0
-    texture: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
-    mask: {fileID: 2800000, guid: ff3d1bf82c827c04da92e0f76971490c, type: 3}
-  - isGroup: 0
-    texture: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
-    mask: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
-  - isGroup: 0
-    texture: {fileID: 2800000, guid: d453b3c468fb0114db42229731a138ff, type: 3}
-    mask: {fileID: 0}
+  file: {fileID: 0}
 --- !u!4 &1455252497
 Transform:
   m_ObjectHideFlags: 0
@@ -643,8 +631,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5424e6e93ab9bfb45ac6bc087aa51598, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  asset: {fileID: 2800000, guid: d1c081e7d21478941ae30fc8d81b741f, type: 3}
+  asset: {fileID: 2800000, guid: 4e6defb25a2dd6e40973064f21702b46, type: 3}
   absolutePath: Packages/com.pfc.psd-shared-assets/Assets/Import/LayersAndMasks.psd
+  OnLoad:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1455252496}
+        m_TargetAssemblyTypeName: CreatePsdTest, Needle.PsdFile.Runtime
+        m_MethodName: SetFile
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 1
   file: {fileID: 0}
 --- !u!4 &1770619959
 Transform:

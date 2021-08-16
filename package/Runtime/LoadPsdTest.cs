@@ -6,11 +6,13 @@ using System.Linq;
 using PhotoshopFile;
 using subjectnerdagreement.psdexport;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class LoadPsdTest : MonoBehaviour
 {
 	public UnityEngine.Object asset;
     public string absolutePath;
+    public UnityEvent<File> OnLoad;
     
     [ContextMenu("Load Now")]
     void LoadNow()
@@ -22,6 +24,8 @@ public class LoadPsdTest : MonoBehaviour
         var settings = new PsdExportSettings(path);
         file = Parse(settings.Psd);
         file.name = Path.GetFileNameWithoutExtension(path);
+
+        OnLoad?.Invoke(file);
     }
 
     [Serializable]
@@ -36,6 +40,25 @@ public class LoadPsdTest : MonoBehaviour
 	    public LayerA parent;
 	    public Layer layer;
 	    public List<LayerA> layers = new List<LayerA>();
+
+	    public IEnumerable<LayerA> FlattenedLayers
+	    {
+		    get
+		    {
+			    if(!(this is File))
+					yield return this;
+			    
+			    if (layers == null || !layers.Any()) yield break;
+			    
+			    foreach (var l in layers) {
+				    if(!l) continue;
+				    foreach(var f in l.FlattenedLayers) {
+					    if(!f) continue;
+						yield return f;
+				    }
+			    }
+		    }
+	    }
     }
 
     [Serializable]

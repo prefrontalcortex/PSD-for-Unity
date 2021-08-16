@@ -13,16 +13,23 @@ using Color = UnityEngine.Color;
 
 public class CreatePsdTest : MonoBehaviour
 {
-    [Serializable]
-    public class LayerData
+    // [Serializable]
+    // public class LayerData
+    // {
+    //   public bool isGroup = false;
+    //   public Texture2D texture;
+    //   public Texture2D mask;
+    // }
+    //
+    // public List<LayerData> layers = new List<LayerData>();
+
+    public void SetFile(LoadPsdTest.File file)
     {
-      public bool isGroup = false;
-      public Texture2D texture;
-      public Texture2D mask;
+      this.file = file;
     }
     
-    public List<LayerData> layers = new List<LayerData>();
-
+    public LoadPsdTest.File file;
+    
     [ContextMenu("Create File")]
     void CreateFile()
     {
@@ -70,12 +77,22 @@ public class CreatePsdTest : MonoBehaviour
         {
           // LayerList is an ArrayList, so we have to cast to get a generic
           // IEnumerable that works with LINQ.
-          var pdnLayers = layers;
-          var psdLayers = pdnLayers./*AsParallel().AsOrdered().*/Select(pdnLayer =>
+          var pdnLayers = file.FlattenedLayers;
+          var psdLayers = pdnLayers.Reverse()./*AsParallel().AsOrdered().*/Select(pdnLayer =>
           {
             var psdLayer = new PhotoshopFile.Layer(psdFile);
-            StoreLayer(pdnLayer.texture, pdnLayer.mask, psdLayer, psdToken);
+            StoreLayer2(pdnLayer, psdLayer, psdToken);
 
+            // TODO proper layer sections
+            // LayerSectionType type = LayerSectionType.Layer;
+            // if (pdnLayer.isGroup)
+            //   type |= LayerSectionType.OpenFolder;
+            // // if (pdnLayer.parent != null && pdnLayer == pdnLayer.parent.layers.Last())
+            // //   type |= LayerSectionType.SectionDivider;
+            //
+            // if(type != LayerSectionType.Layer)
+            //   psdLayer.AdditionalInfo.Add(new LayerSectionInfo(type));
+            
             // progress.Notify(percentPerLayer);
             return psdLayer;
           });
@@ -103,31 +120,86 @@ public class CreatePsdTest : MonoBehaviour
       public bool RleCompress { get; set; }
     }
 
+    public static void StoreLayer2(LoadPsdTest.LayerA layer, PhotoshopFile.Layer psdLayer, PsdSaveConfigToken psdToken)
+    {
+      psdLayer.Name = layer.name;
+      psdLayer.Rect = layer.rect;
+      psdLayer.BlendModeKey = PsdBlendMode.Normal;
+      psdLayer.Opacity = 255;
+      psdLayer.Visible = true;
+      psdLayer.Masks = new MaskInfo();
+      psdLayer.BlendingRangesData = new BlendingRanges(psdLayer);
+
+      if (layer.texture)
+      {
+        // Store channel metadata
+        int layerSize = (int) psdLayer.Rect.width * (int) psdLayer.Rect.height;
+        for (int i = -1; i < 3; i++)
+        {
+          var ch = new Channel((short)i, psdLayer);
+          ch.ImageCompression = psdToken.RleCompress ? ImageCompression.Rle : ImageCompression.Raw;
+          ch.ImageData = new byte[layerSize];
+          psdLayer.Channels.Add(ch);
+        }
+
+        // Store and compress channel image data
+        var channelsArray = psdLayer.Channels.ToIdArray();
+        StoreLayerImage(channelsArray, psdLayer.AlphaChannel, layer.texture, psdLayer.Rect);
+      }
+
+      if (layer.maskTexture)
+      {
+        var layerMask = new Mask(psdLayer, layer.maskRect, Byte.MaxValue, new BitVector32(16));
+        var maskSize = layer.maskTexture.width * layer.maskTexture.height;
+        psdLayer.Masks.LayerMask = layerMask;
+        // layerMask.Rect = new Rect(0, 0, mask.width, mask.height);
+        layerMask.PositionVsLayer = true;
+
+        var ch = new Channel((short)-2, psdLayer);
+        ch.ImageCompression = psdToken.RleCompress ? ImageCompression.Rle : ImageCompression.Raw;
+        ch.ImageData = new byte[maskSize];
+        psdLayer.Channels.Add(ch);
+        
+        layerMask.ImageData = ch.ImageData; 
+
+        StoreMaskImage(ch, layer.maskTexture, layer.maskRect); 
+      }
+    }
+    
     public static void StoreLayer(Texture2D layer, Texture2D mask,
       PhotoshopFile.Layer psdLayer, PsdSaveConfigToken psdToken)
     {
       // Set layer metadata
-      psdLayer.Name = layer.name;
-      psdLayer.Rect = new Rect(0, 0, layer.width, layer.height);
+      if(layer)
+      {
+        psdLayer.Name = layer.name;
+        psdLayer.Rect = new Rect(0, 0, layer.width, layer.height);
+      }
+      else
+      {
+        psdLayer.Name = "No Texture";
+      }
       psdLayer.BlendModeKey = PsdBlendMode.Normal;
       psdLayer.Opacity = 255;
       psdLayer.Visible = true;
       psdLayer.Masks = new MaskInfo();
       psdLayer.BlendingRangesData = new BlendingRanges(psdLayer);
       
-      // Store channel metadata
-      int layerSize = (int) psdLayer.Rect.width * (int) psdLayer.Rect.height;
-      for (int i = -1; i < 3; i++)
-      {
-        var ch = new Channel((short)i, psdLayer);
-        ch.ImageCompression = psdToken.RleCompress ? ImageCompression.Rle : ImageCompression.Raw;
-        ch.ImageData = new byte[layerSize];
-        psdLayer.Channels.Add(ch);
-      }
+      if(layer) {
+        // Store channel metadata
+        int layerSize = (int) psdLayer.Rect.width * (int) psdLayer.Rect.height;
+        for (int i = -1; i < 3; i++)
+        {
+          var ch = new Channel((short)i, psdLayer);
+          ch.ImageCompression = psdToken.RleCompress ? ImageCompression.Rle : ImageCompression.Raw;
+          ch.ImageData = new byte[layerSize];
+          psdLayer.Channels.Add(ch);
+        }
 
-      // Store and compress channel image data
-      var channelsArray = psdLayer.Channels.ToIdArray();
-      StoreLayerImage(channelsArray, psdLayer.AlphaChannel, layer, psdLayer.Rect);
+        // Store and compress channel image data
+        var channelsArray = psdLayer.Channels.ToIdArray();
+        StoreLayerImage(channelsArray, psdLayer.AlphaChannel, layer, psdLayer.Rect);
+      }
       
       // store mask metadata
       if (mask)
@@ -144,7 +216,6 @@ public class CreatePsdTest : MonoBehaviour
         psdLayer.Channels.Add(ch);
         
         layerMask.ImageData = ch.ImageData; 
-        // layerMask.BackgroundColor = Byte.MaxValue;
 
         StoreMaskImage(ch, mask, new Rect(0,0, mask.width, mask.height)); 
       }
