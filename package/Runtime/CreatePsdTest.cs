@@ -1,28 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PhotoshopFile;
-using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Color = UnityEngine.Color;
 
 public class CreatePsdTest : MonoBehaviour
 {
-    // [Serializable]
-    // public class LayerData
-    // {
-    //   public bool isGroup = false;
-    //   public Texture2D texture;
-    //   public Texture2D mask;
-    // }
-    //
-    // public List<LayerData> layers = new List<LayerData>();
-
     public void SetFile(LoadPsdTest.File file)
     {
       this.file = file;
@@ -33,7 +21,7 @@ public class CreatePsdTest : MonoBehaviour
     [ContextMenu("Create File")]
     void CreateFile()
     {
-        var tex = new Texture2D(1000, 1000);
+        var tex = new Texture2D((int) file.rect.width, (int) file.rect.height);
         tex.SetPixels(Enumerable.Repeat(new Color(1, 0, 0, 1), tex.width * tex.height).ToArray());
         tex.Apply();
       
@@ -41,8 +29,8 @@ public class CreatePsdTest : MonoBehaviour
         psdFile.BaseLayer = new Layer(psdFile);
         // file.BaseLayer.
 
-        psdFile.RowCount = tex.height;
-        psdFile.ColumnCount = tex.width;
+        psdFile.RowCount = (int) file.rect.height;
+        psdFile.ColumnCount = (int) file.rect.width;
         
         psdFile.ChannelCount = 4; 
         psdFile.ColorMode = PsdColorMode.RGB;
@@ -77,26 +65,37 @@ public class CreatePsdTest : MonoBehaviour
         {
           // LayerList is an ArrayList, so we have to cast to get a generic
           // IEnumerable that works with LINQ.
-          var pdnLayers = file.FlattenedLayers;
-          var psdLayers = pdnLayers.Reverse()./*AsParallel().AsOrdered().*/Select(pdnLayer =>
+          var pdnLayers = file.FlattenedLayersWithGroupDividers;
+          var psdLayers = pdnLayers.Select(pdnLayer => // AsParallel().AsOrdered().
           {
+            if (pdnLayer is LoadPsdTest.GroupDivider)
+            {
+              var separatorLayer = new PhotoshopFile.Layer(psdFile);
+              separatorLayer.AdditionalInfo.Add(new LayerSectionInfo(LayerSectionType.SectionDivider));
+              StoreLayer2(pdnLayer, separatorLayer, psdToken);
+              return separatorLayer;
+            }
+
             var psdLayer = new PhotoshopFile.Layer(psdFile);
             StoreLayer2(pdnLayer, psdLayer, psdToken);
 
             // TODO proper layer sections
-            // LayerSectionType type = LayerSectionType.Layer;
-            // if (pdnLayer.isGroup)
-            //   type |= LayerSectionType.OpenFolder;
-            // // if (pdnLayer.parent != null && pdnLayer == pdnLayer.parent.layers.Last())
-            // //   type |= LayerSectionType.SectionDivider;
-            //
-            // if(type != LayerSectionType.Layer)
-            //   psdLayer.AdditionalInfo.Add(new LayerSectionInfo(type));
+            var layerSectionType = LayerSectionType.Layer;
+            if (pdnLayer.isGroup)
+              layerSectionType = LayerSectionType.OpenFolder;
+            
+            psdLayer.AdditionalInfo.Add(new LayerSectionInfo(layerSectionType));
             
             // progress.Notify(percentPerLayer);
             return psdLayer;
-          });
-          psdFile.Layers.AddRange(psdLayers);
+          }).Reverse();
+
+          var enumerable = psdLayers.ToList();
+          
+          // for (int i = enumerable.Count() - 1; i >= 0; i--)
+          //   Debug.Log(LoadPsdTest.LayerDebug(i, enumerable[i]));
+          
+          psdFile.Layers.AddRange(enumerable);
         };
 
         // Process composite and layers in parallel

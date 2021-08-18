@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,21 +40,28 @@ public class LoadPsdTest : MonoBehaviour
 	    public Layer layer;
 	    public List<LayerA> layers = new List<LayerA>();
 
-	    public IEnumerable<LayerA> FlattenedLayers
+	    public IEnumerable<LayerA> FlattenedLayersWithGroupDividers
 	    {
 		    get
 		    {
-			    if(!(this is File))
+			    var isFileRoot = this is File;
+			    if(!isFileRoot)
 					yield return this;
 			    
-			    if (layers == null || !layers.Any()) yield break;
+			    if (layers == null || !layers.Any()) 
+				    yield break;
 			    
-			    foreach (var l in layers) {
+			    foreach (var l in layers)
+			    {
 				    if(!l) continue;
-				    foreach(var f in l.FlattenedLayers) {
+				    foreach(var f in l.FlattenedLayersWithGroupDividers)
+				    {
 					    if(!f) continue;
 						yield return f;
 				    }
+
+				    if(l.isGroup)
+						yield return GroupDivider.Create();
 			    }
 		    }
 	    }
@@ -66,7 +72,23 @@ public class LoadPsdTest : MonoBehaviour
     {
     }
 
+    [Serializable]
+    public class GroupDivider : LayerA
+    {
+	    public static GroupDivider Create()
+	    {
+		    var result = CreateInstance<GroupDivider>();
+		    result.name = "</Layer group>";
+		    return result;
+	    }
+    }
+
     public File file;
+
+    public static string LayerDebug(int index, Layer layer)
+    {
+	    return "[Layer " + index + "] " + layer.Name + ": " + string.Join(", ", layer.AdditionalInfo.OfType<LayerSectionInfo>().Select(x => x.SectionType + " - " + x.Subtype));
+    }
     
     public static File Parse(PsdFile psd)
     {
@@ -92,11 +114,14 @@ public class LoadPsdTest : MonoBehaviour
 			layerA.maskRect = layer.Masks.LayerMask?.Rect ?? Rect.zero;
 
 			// layerVisibility.Add(layer.Visible);
-
+			
 			// Get the section info for this layer
 			var secInfo = layer.AdditionalInfo
 				.Where(info => info.GetType() == typeof(LayerSectionInfo))
 				.ToArray();
+			
+			// Debug.Log(LayerDebug(i, layer));
+			
 			// Section info is basically layer group info
 			bool isOpen = false;
 			bool isGroup = false;

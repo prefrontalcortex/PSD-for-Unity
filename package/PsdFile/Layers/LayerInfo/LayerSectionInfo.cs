@@ -14,7 +14,6 @@ using System;
 
 namespace PhotoshopFile
 {
-  [Flags]
   public enum LayerSectionType
   {
     Layer = 0,
