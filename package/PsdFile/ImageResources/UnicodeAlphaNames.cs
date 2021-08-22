@@ -37,7 +37,7 @@ namespace PhotoshopFile
 
       while (reader.BaseStream.Position < endPosition)
       {
-        var channelName = reader.ReadUnicodeString();
+        var channelName = reader.ReadUnicodeString(out var _);
 
         // Photoshop writes out a null terminator for Unicode alpha names.
         // There is no null terminator on other Unicode strings in PSD files.

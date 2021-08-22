@@ -173,13 +173,14 @@ namespace PhotoshopFile
       return str;
     }
 
-    public string ReadUnicodeString()
+    public string ReadUnicodeString(out int totalBytes)
     {
       var numChars = ReadInt32();
       var length = 2 * numChars;
       var data = ReadBytes(length);
       var str = Encoding.BigEndianUnicode.GetString(data, 0, length);
 
+      totalBytes = length + 4;
       return str;
     }
 

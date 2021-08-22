@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using subjectnerdagreement.psdexport;
@@ -64,27 +63,7 @@ public class PsdPicker : MonoBehaviour
 		var file = LoadPsdTest.Parse(settings.Psd);
 		file.name = Path.GetFileNameWithoutExtension(absolutePath);
 
-		var scrollView = fileRoot.rootVisualElement.Q<ScrollView>();
-
-		void AddLevels(LoadPsdTest.LayerA current, VisualElement parent)
-		{
-			foreach (var layer in current.layers)
-			{
-				var item = listItem.Instantiate();
-				item.Q<Label>("name").text = layer.name;
-				item.Q<Toggle>().value = layer.visible;
-				item.Q("texture").style.backgroundImage = layer.texture;
-				
-				parent.Add(item);
-
-				if (layer.layers.Any())
-					AddLevels(layer, item.Q<Foldout>());
-				else
-					item.Q<Foldout>().style.display = DisplayStyle.None;
-			}
-		}
-
-		AddLevels(file, scrollView);
+		PsdUIToolkit.AddDoc(fileRoot.rootVisualElement, file);
 	}
 #endif
 }

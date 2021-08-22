@@ -38,8 +38,8 @@ namespace PhotoshopFile
     {
       Version = reader.ReadUInt32();
       HasRealMergedData = reader.ReadBoolean();
-      ReaderName = reader.ReadUnicodeString();
-      WriterName = reader.ReadUnicodeString();
+      ReaderName = reader.ReadUnicodeString(out var _);
+      WriterName = reader.ReadUnicodeString(out var _);
       FileVersion = reader.ReadUInt32();
     }
 

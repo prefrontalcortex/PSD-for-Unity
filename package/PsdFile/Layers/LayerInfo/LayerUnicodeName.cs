@@ -27,7 +27,7 @@ namespace PhotoshopFile
 
     public LayerUnicodeName(PsdBinaryReader reader)
     {
-      Name = reader.ReadUnicodeString();
+      Name = reader.ReadUnicodeString(out var _);
     }
 
     protected override void WriteData(PsdBinaryWriter writer)

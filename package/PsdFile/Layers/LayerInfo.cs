@@ -69,6 +69,8 @@ namespace PhotoshopFile
       var startPosition = reader.BaseStream.Position;
 
       LayerInfo result;
+      
+      // Adobe Docs for file format: https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
       switch (key)
       {
         case "Layr":
@@ -83,6 +85,50 @@ namespace PhotoshopFile
         case "luni":
           result = new LayerUnicodeName(reader);
           break;
+        
+        case "TySh": // Type tool object setting
+          result = new TypeToolObjectInfo(reader, (int) length);
+          break;
+        case "lyid": // Layer ID
+        case "lclr": // Sheet color setting
+        case "fxrp": // Reference point
+        case "shmd": // Metadata setting
+        case "lspf": // Protected setting
+          
+        // Effects layer
+        case "lrFX": // Effects Layer
+
+        // Adjustment Layers
+        case "SoCo": // Solid color sheet setting
+        case "GdFl": // Gradient
+        case "PtFl": // Pattern
+        case "brit": // Brightness/Contrast
+        case "levl": // Levels
+        case "curv": // Curves
+        case "expA": // Exposure
+        case "vibA": // Vibrance
+        case "hue2": // Hue/Saturation
+        case "blnc": // Color Balance
+        case "blwh": // Black White
+        case "phfl": // Photo Filter
+        case "mixr": // Channel Mixer
+        case "clrL": // Color Lookup
+        case "nvrt": // Invert
+        case "post": // Posterize
+        case "thrs": // Threshold
+        case "grdm": // Gradient Map
+        case "selc": // Selective color
+        
+        // Linked Layers
+        case "lnkD":
+        case "lnk2":
+        case "lnk3":
+        case "SoLE": // Smart Object Layer Data
+
+        // Other
+        case "CgEd": // Content Generator Extra Data
+        case "Txt2": // Text Engine Data
+          
         default:
           result = new RawLayerInfo(reader, signature, key, length);
           break;
