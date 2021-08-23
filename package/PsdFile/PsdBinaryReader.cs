@@ -145,6 +145,15 @@ namespace PhotoshopFile
       return rect;
     }
 
+    public double ReadDouble()
+    {
+      // var bytes = reader.ReadBytes(8);
+      // return BitConverter.To.ToDouble(bytes, 0);
+      var bb = ReadInt64();
+      return BitConverter.Int64BitsToDouble(bb);
+      // return reader.ReadDouble();
+    }
+
     /// <summary>
     /// Read a fixed-length ASCII string.
     /// </summary>
@@ -184,6 +193,13 @@ namespace PhotoshopFile
       return str;
     }
 
+    // public string ReadUnicodeStringOfKnownLength(int length)
+    // {
+    //   var data = ReadBytes(length);
+    //   var str = Encoding.BigEndianUnicode.GetString(data, 0, length);
+    //   return str;
+    // }
+
     //////////////////////////////////////////////////////////////////
 
     # region IDisposable
@@ -218,7 +234,6 @@ namespace PhotoshopFile
     }
 
     #endregion
-
   }
 
 }
