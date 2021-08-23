@@ -109,6 +109,7 @@ public class TypeToolObjectInfo : LayerInfo
                     case "obj":
                         break; // Reference
                     case "Objc":
+                        ReadDescriptor();
                         break; // Descriptor
                     case "VlLs":
                         break; // List
@@ -118,6 +119,18 @@ public class TypeToolObjectInfo : LayerInfo
                         Debug.Log("Double: " + dbl);
                         break; // Double
                     case "UntF":
+                        //  Units the following value is in. One of the following:
+                        // '#Ang' = angle: base degrees
+                        // '#Rsl' = density: base per inch
+                        // '#Rlt' = distance: base 72ppi
+                        // '#Nne' = none: coerced.
+                        // '#Prc'= percent: unit value
+                        // '#Pxl' = pixels: tagged unit value
+                        var unitType = System.Text.Encoding.ASCII.GetString(reader.ReadBytes(4), 0, 4);
+                        remaining -= 4;
+                        var actualValue = reader.ReadDouble();
+                        remaining -= 8;
+                        Debug.Log("Unit float: " + unitType + "=" + actualValue);
                         break; // Unit float
                     case "TEXT":
                         text = reader.ReadUnicodeString(out var byteCount3);
@@ -145,6 +158,7 @@ public class TypeToolObjectInfo : LayerInfo
                         break; // Boolean
                     case "GlbO":
                         break; // GlobalObject same as Descriptor
+                        ReadDescriptor();
                     case "type":
                         break; // Class
                     case "GlbC":
@@ -159,7 +173,8 @@ public class TypeToolObjectInfo : LayerInfo
                         var descLength = reader.ReadInt32();
                         remaining -= 4;
                         var data = reader.ReadBytes(descLength);
-                        File.WriteAllBytes(Application.dataPath + "/" + descLength + ".bytes", data);
+                        remaining -= descLength;
+                        // File.WriteAllBytes(Application.dataPath + "/" + descLength + ".bytes", data);
                         
                         // string start marker:
                         // (þÿ (characters)
@@ -172,18 +187,34 @@ public class TypeToolObjectInfo : LayerInfo
                         int c = 0;
                         for (c = 0; c < count - 2; c++)
                         {
-                            if (data[c] == 0x28 && data[c + 1] == 0xfe && data[c + 2] == 0xff)
+                            if (data[c] == 0x28 && data[c + 1] == 0xfe && data[c + 2] == 0xff) // string start marker
                             {
                                 var startIndex = c + 3;
                                 for (c = startIndex; c < count - 2; c++)
                                 {
-                                    if (data[c] == 0x0d && data[c + 1] == 0x29)
+                                    if ((data[c] == 0x0d && data[c + 1] == 0x29) || (data[c] != 0x5c && data[c + 1] == 0x29)) // string end marker, either \r) or just ) but NOT \)
                                     {
-                                        var endIndex = c - 1;
+                                        var endIndex = data[c] == 0x0d ? c - 1 : c; // one earlier with \r) ?
                                         Debug.Log("Found string index at " + startIndex + " to " + endIndex);
                                         // Seems we need to parse byte pairs one-by-one
                                         // and look out for escaped \) \( parentheses. These are 3 byte (!)
-                                        var stringBytes = Encoding.BigEndianUnicode.GetString(data, startIndex, endIndex - startIndex);
+                                        List<byte> buffer = new List<byte>(endIndex - startIndex);
+                                        for (int k = startIndex; k < endIndex; k+=2)
+                                        {
+                                            if (data[k] == 0x0 && data[k + 1] == 0x5c && (data[k + 2] == 0x28 || data[k + 2] == 0x29))
+                                            {
+                                                buffer.Add(data[k]);
+                                                buffer.Add(data[k + 2]);
+                                                k += 1;
+                                            }
+                                            else
+                                            {
+                                                buffer.Add(data[k]);
+                                                buffer.Add(data[k + 1]);
+                                            }
+                                        }
+                                        var stringBytes = Encoding.BigEndianUnicode.GetString(buffer.ToArray(), 0, buffer.Count);
+                                        // var stringBytes = Encoding.BigEndianUnicode.GetString(data, startIndex, endIndex - startIndex);
                                         Debug.Log(stringBytes);
                                         break;
                                     }
@@ -192,9 +223,8 @@ public class TypeToolObjectInfo : LayerInfo
                         }
                         
                         var rawDt = Encoding.ASCII.GetString(data); // ReadDescriptorKey(out var bb3);
-                        remaining -= descLength;
                         Debug.Log("  " + "[" + descLength + "] "+ " Raw Data: " + rawDt);
-                        File.WriteAllText(Application.dataPath + "/" + descLength + ".txt", rawDt);
+                        // File.WriteAllText(Application.dataPath + "/" + descLength + ".txt", rawDt);
                         
                         // var stringIndex = rawDt.IndexOf("(˛ˇ", StringComparison.Ordinal);
                         // var nextNewline = rawDt.IndexOf('\n', stringIndex);
