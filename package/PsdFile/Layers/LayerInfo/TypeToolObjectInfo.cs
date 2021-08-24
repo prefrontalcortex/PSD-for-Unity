@@ -183,11 +183,40 @@ public class TypeToolObjectInfo : LayerInfo
                         // string end marker: \r)
                         // 0D 29 (hex)
 
+                        var sb = new StringBuilder();
+
                         var count = data.Length;
+                        var dictionaryDepth = 0;
+                        var maxLogs = 100;
                         int c = 0;
                         for (c = 0; c < count - 2; c++)
                         {
-                            if (data[c] == 0x28 && data[c + 1] == 0xfe && data[c + 2] == 0xff) // string start marker
+                            if (data[c] == '<' && data[c + 1] == '<') // dictionary start marker
+                            {
+                                c += 1;
+                                dictionaryDepth++;
+                            }
+                            else if (data[c] == '>' && data[c + 1] == '>') // dictionary end marker
+                            {
+                                c += 1;
+                                dictionaryDepth--;
+                            }
+                            else if (data[c] == 0x2f) // property start marker /
+                            {
+                                var startIndex = c + 1;
+                                // find next space
+                                for (c = startIndex; c < count; c++)
+                                {
+                                    if (data[c] == 0x20 || data[c] == 0x0a || data[c] == 0x09) // property end marker, a, \r, \t
+                                    {
+                                        var endIndex = c;
+                                        var propertyName = Encoding.ASCII.GetString(data, startIndex, endIndex - startIndex);
+                                        sb.AppendLine("".PadLeft(4 * dictionaryDepth) + propertyName);
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (data[c] == 0x28 && data[c + 1] == 0xfe && data[c + 2] == 0xff) // string start marker (þÿ
                             {
                                 var startIndex = c + 3;
                                 for (c = startIndex; c < count - 2; c++)
@@ -195,7 +224,7 @@ public class TypeToolObjectInfo : LayerInfo
                                     if ((data[c] == 0x0d && data[c + 1] == 0x29) || (data[c] != 0x5c && data[c + 1] == 0x29)) // string end marker, either \r) or just ) but NOT \)
                                     {
                                         var endIndex = data[c] == 0x0d ? c - 1 : c; // one earlier with \r) ?
-                                        Debug.Log("Found string index at " + startIndex + " to " + endIndex);
+                                        // Debug.Log("Found string index at " + startIndex + " to " + endIndex);
                                         // Seems we need to parse byte pairs one-by-one
                                         // and look out for escaped \) \( parentheses. These are 3 byte (!)
                                         List<byte> buffer = new List<byte>(endIndex - startIndex);
@@ -215,15 +244,15 @@ public class TypeToolObjectInfo : LayerInfo
                                         }
                                         var stringBytes = Encoding.BigEndianUnicode.GetString(buffer.ToArray(), 0, buffer.Count);
                                         // var stringBytes = Encoding.BigEndianUnicode.GetString(data, startIndex, endIndex - startIndex);
-                                        Debug.Log(stringBytes);
+                                        sb.AppendLine("".PadLeft(4 * (dictionaryDepth + 1)) + stringBytes);//$"[{startIndex}–{endIndex}] {stringBytes}");
                                         break;
                                     }
                                 }
                             }
                         }
                         
-                        var rawDt = Encoding.ASCII.GetString(data); // ReadDescriptorKey(out var bb3);
-                        Debug.Log("  " + "[" + descLength + "] "+ " Raw Data: " + rawDt);
+                        // var rawDt = Encoding.ASCII.GetString(data); // ReadDescriptorKey(out var bb3);
+                        // Debug.Log("  " + "[" + descLength + "] "+ " Raw Data: " + rawDt);
                         // File.WriteAllText(Application.dataPath + "/" + descLength + ".txt", rawDt);
                         
                         // var stringIndex = rawDt.IndexOf("(˛ˇ", StringComparison.Ordinal);
@@ -237,6 +266,9 @@ public class TypeToolObjectInfo : LayerInfo
                         // var asciiChars = reader.ReadAsciiChars(remaining);
                         // Debug.Log("Remaining data: " + remaining + "\n" + asciiChars);
                         // remaining -= remaining;
+                        
+                        File.WriteAllText(Application.dataPath + "/" + descLength + ".txt", sb.ToString());
+                        Debug.Log(sb.ToString(0, Mathf.Max(5000, sb.Length)));
                         
                         break; // Raw Data
                 }
