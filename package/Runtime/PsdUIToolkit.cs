@@ -40,7 +40,7 @@ public class PsdUIToolkit : MonoBehaviour
     private static string GetExtraDetailsAsString(LoadPsdTest.LayerA layer)
     {
         if (layer.layer != null)
-            return string.Join("\n", layer.layer.AdditionalInfo.Select(x => x.Key + " [" + x.GetType() + "]"));
+            return string.Join("\n", layer.layer.AdditionalInfo.Select(x => x.Key + " [" + x.GetType() + "] = " + x.ToString()));
         else
             return "(no serialized layer data)";
     }

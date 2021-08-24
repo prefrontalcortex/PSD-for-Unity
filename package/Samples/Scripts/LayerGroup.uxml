@@ -14,5 +14,5 @@
             <ui:Label text="Label" display-tooltip-when-elided="true" name="extra" binding-path="name" enable-rich-text="false" style="-unity-text-align: middle-left;" />
         </ui:VisualElement>
     </ui:VisualElement>
-    <ui:Foldout text="Layers" name="childLayers" style="width: 64px; height: 64px;" />
+    <ui:Foldout text="Layers" name="childLayers" />
 </ui:UXML>

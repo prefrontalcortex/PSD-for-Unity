@@ -11,6 +11,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PhotoshopFile
 {
@@ -69,7 +70,7 @@ namespace PhotoshopFile
       var startPosition = reader.BaseStream.Position;
 
       LayerInfo result;
-      
+      Debug.Log("Key: " + key + ", length: " + length);
       // Adobe Docs for file format: https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
       switch (key)
       {
@@ -85,31 +86,39 @@ namespace PhotoshopFile
         case "luni":
           result = new LayerUnicodeName(reader);
           break;
-        
         case "TySh": // Type tool object setting
           result = new TypeToolObjectInfo(reader, (int) length);
           break;
-        case "lyid": // Layer ID
         case "lclr": // Sheet color setting
-        case "fxrp": // Reference point
-        case "shmd": // Metadata setting
-        case "lspf": // Protected setting
-          
-        // Effects layer
-        case "lrFX": // Effects Layer
-
+          result = new SheetColorLayerInfo(reader, (int)length);
+          break;
+        
         // Adjustment Layers
         case "SoCo": // Solid color sheet setting
+          result = new SolidColorAdjustment(reader, (int)length);
+          break;
+        case "blwh": // Black White
+          result = new BlackWhiteAdjustment(reader, (int)length);
+          break;
+        case "hue2": // Hue/Saturation
+          result = new HueSaturationAdjustment(reader, (int)length);
+          break;
+        case "brit": // Brightness/Contrast
+          result = new BrightnessContrastAdjustment(reader, (int)length);
+          break;
+        case "shmd": // Metadata setting
+          result = new MetadataLayerInfo(reader, (int)length);
+          break;
+        
+        // Effects layer
+        case "lrFX": // Effects Layer
         case "GdFl": // Gradient
         case "PtFl": // Pattern
-        case "brit": // Brightness/Contrast
         case "levl": // Levels
         case "curv": // Curves
         case "expA": // Exposure
         case "vibA": // Vibrance
-        case "hue2": // Hue/Saturation
         case "blnc": // Color Balance
-        case "blwh": // Black White
         case "phfl": // Photo Filter
         case "mixr": // Channel Mixer
         case "clrL": // Color Lookup
@@ -119,6 +128,11 @@ namespace PhotoshopFile
         case "grdm": // Gradient Map
         case "selc": // Selective color
         
+        case "fxrp": // Reference point
+        
+        case "lspf": // Protected setting
+        case "lyid": // Layer ID
+          
         // Linked Layers
         case "lnkD":
         case "lnk2":
