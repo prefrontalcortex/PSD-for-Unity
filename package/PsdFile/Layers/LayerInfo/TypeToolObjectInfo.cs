@@ -183,8 +183,19 @@ public class TypeToolObjectInfo : LayerInfo
                         // string end marker: \r)
                         // 0D 29 (hex)
 
+                        // Interesting values to get text, font, size, color:
+                        
+                        // EngineDict.Editor.Text
+                        // ParagraphRun.StyleRun.RunArray.StyleSheet.StyleSheetData.FontSize
+                        //                                                         .FillColor.Values[]
+                        // ResourceDict.StyleSheetSet.StyleSheetData.Font  ===> Font ID?
+                        //                                          .FontSize
+                        //                                          .FillColor.Values[]
+                        //                                          .StrokeColor.Values[]
+                        // ResourceDict.FontSet[].Name
+                        
                         var sb = new StringBuilder();
-
+                        
                         var count = data.Length;
                         var dictionaryDepth = 0;
                         var maxLogs = 100;
@@ -216,6 +227,10 @@ public class TypeToolObjectInfo : LayerInfo
                                     }
                                 }
                             }
+                            // TODO add array | [val val val]
+                            // TODO add bool  | true/false
+                            // TODO add float | 0.3
+                            // TODO add int   | 4
                             else if (data[c] == 0x28 && data[c + 1] == 0xfe && data[c + 2] == 0xff) // string start marker (þÿ
                             {
                                 var startIndex = c + 3;
@@ -244,7 +259,7 @@ public class TypeToolObjectInfo : LayerInfo
                                         }
                                         var stringBytes = Encoding.BigEndianUnicode.GetString(buffer.ToArray(), 0, buffer.Count);
                                         // var stringBytes = Encoding.BigEndianUnicode.GetString(data, startIndex, endIndex - startIndex);
-                                        sb.AppendLine("".PadLeft(4 * (dictionaryDepth + 1)) + stringBytes);//$"[{startIndex}–{endIndex}] {stringBytes}");
+                                        sb.AppendLine("".PadLeft(4 * (dictionaryDepth + 1)) + "<color=#f0f>" + stringBytes + "</color>");//$"[{startIndex}–{endIndex}] {stringBytes}");
                                         break;
                                     }
                                 }
@@ -267,7 +282,7 @@ public class TypeToolObjectInfo : LayerInfo
                         // Debug.Log("Remaining data: " + remaining + "\n" + asciiChars);
                         // remaining -= remaining;
                         
-                        File.WriteAllText(Application.dataPath + "/" + descLength + ".txt", sb.ToString());
+                        // File.WriteAllText(Application.dataPath + "/" + descLength + ".txt", sb.ToString());
                         Debug.Log(sb.ToString(0, Mathf.Max(5000, sb.Length)));
                         
                         break; // Raw Data
