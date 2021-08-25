@@ -1,8 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using subjectnerdagreement.psdexport;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 [CustomEditor(typeof(LoadPsdTest))]
@@ -35,7 +31,7 @@ public class LoadPSDEditor : Editor
 
             var t = target as LoadPsdTest;
 
-            PsdUIToolkit.AddDoc(psdUi, t.file);
+            PsdUIToolkit.AddDoc(psdUi, t.psFile);
         }
 
         void LoadAndBuildPsdUI()

@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -7,27 +9,12 @@ using System.Threading.Tasks;
 using PhotoshopFile;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
-using Color = UnityEngine.Color;
 
-public class CreatePsdTest : MonoBehaviour
+public class PsWriter : MonoBehaviour
 {
-    public void SetFile(LoadPsdTest.File file)
+    internal static void CreateFile(PsFile psFile, string outputPath)
     {
-      this.file = file;
-    }
-    
-    public LoadPsdTest.File file;
-
-    [ContextMenu("Create File")]
-    void CreateFileContext()
-    {
-      var outputPath = Path.GetFullPath(Application.dataPath + "/../testfile.psd");
-      CreateFile(file, outputPath);
-    }
-    
-    public static void CreateFile(LoadPsdTest.File file, string outputPath)
-    {
-        var tex = new Texture2D((int) file.rect.width, (int) file.rect.height);
+        var tex = new Texture2D((int) psFile.rect.width, (int) psFile.rect.height);
         tex.SetPixels(Enumerable.Repeat(new Color(1, 0, 0, 1), tex.width * tex.height).ToArray());
         tex.Apply();
       
@@ -35,8 +22,8 @@ public class CreatePsdTest : MonoBehaviour
         psdFile.BaseLayer = new Layer(psdFile);
         // file.BaseLayer.
 
-        psdFile.RowCount = (int) file.rect.height;
-        psdFile.ColumnCount = (int) file.rect.width;
+        psdFile.RowCount = (int) psFile.rect.height;
+        psdFile.ColumnCount = (int) psFile.rect.width;
         
         psdFile.ChannelCount = 4; 
         psdFile.ColorMode = PsdColorMode.RGB;
@@ -71,14 +58,14 @@ public class CreatePsdTest : MonoBehaviour
         {
           // LayerList is an ArrayList, so we have to cast to get a generic
           // IEnumerable that works with LINQ.
-          var pdnLayers = file.FlattenedLayersWithGroupDividers;
+          var pdnLayers = psFile.FlattenedLayersWithGroupDividers;
           var psdLayers = pdnLayers.Select(pdnLayer => // AsParallel().AsOrdered().
           {
-            if (pdnLayer is LoadPsdTest.GroupDivider)
+            if (pdnLayer is GroupDivider)
             {
               var separatorLayer = new PhotoshopFile.Layer(psdFile);
               separatorLayer.AdditionalInfo.Add(new LayerSectionInfo(LayerSectionType.SectionDivider));
-              var infos = pdnLayer.layer?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo));
+              var infos = pdnLayer.originalLayerData?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo));
               if(infos != null)
                 separatorLayer.AdditionalInfo.AddRange(infos);
               StoreLayer2(pdnLayer, separatorLayer, psdToken);
@@ -93,7 +80,7 @@ public class CreatePsdTest : MonoBehaviour
               layerSectionType = LayerSectionType.OpenFolder;
             
             psdLayer.AdditionalInfo.Add(new LayerSectionInfo(layerSectionType));
-            var infos2 = pdnLayer.layer?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo));
+            var infos2 = pdnLayer.originalLayerData?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo));
             if(infos2 != null)
               psdLayer.AdditionalInfo.AddRange(infos2);
             
@@ -104,7 +91,7 @@ public class CreatePsdTest : MonoBehaviour
           var enumerable = psdLayers.ToList();
           
           // for (int i = enumerable.Count() - 1; i >= 0; i--)
-          //   Debug.Log(LoadPsdTest.LayerDebug(i, enumerable[i]));
+          //   Debug.Log(LayerDebug(i, enumerable[i]));
           
           psdFile.Layers.AddRange(enumerable);
         };
@@ -122,24 +109,86 @@ public class CreatePsdTest : MonoBehaviour
         }
     }
 
-
+    // /// <summary>
+    // /// Creates a layer for each channel in a multichannel image.
+    // /// </summary>
+    // private static void CreateLayersFromChannels(PsdFile psdFile)
+    // {
+    //   if (psdFile.ColorMode != PsdColorMode.Multichannel)
+    //   {
+    //     throw new Exception("Not a multichannel image.");
+    //   }
+    //   if (psdFile.Layers.Count > 0)
+    //   {
+    //     throw new PsdInvalidException("Multichannel image should not have layers.");
+    //   }
+    //
+    //   // Get alpha channel names, preferably in Unicode.
+    //   var alphaChannelNames = (AlphaChannelNames)psdFile.ImageResources
+    //     .Get(ResourceID.AlphaChannelNames);
+    //   var unicodeAlphaNames = (UnicodeAlphaNames)psdFile.ImageResources
+    //     .Get(ResourceID.UnicodeAlphaNames);
+    //   if ((alphaChannelNames == null) && (unicodeAlphaNames == null))
+    //   {
+    //     throw new PsdInvalidException("No channel names found.");
+    //   }
+    //
+    //   var channelNames = (unicodeAlphaNames != null)
+    //     ? unicodeAlphaNames.ChannelNames
+    //     : alphaChannelNames.ChannelNames;
+    //   var channels = psdFile.BaseLayer.Channels;
+    //   if (channels.Count > channelNames.Count)
+    //   {
+    //     throw new PsdInvalidException("More channels than channel names.");
+    //   }
+    //
+    //   // Channels are stored from top to bottom, but layers are stored from
+    //   // bottom to top.
+    //   for (int i = channels.Count - 1; i >= 0; i--)
+    //   {
+    //     var channel = channels[i];
+    //     var channelName = channelNames[i];
+    //
+    //     // Copy metadata over from base layer
+    //     var layer = new PhotoshopFile.Layer(psdFile);
+    //     layer.Rect = psdFile.BaseLayer.Rect;
+    //     layer.Visible = true;
+    //     layer.Masks = new MaskInfo();
+    //     layer.BlendingRangesData = new BlendingRanges(layer);
+    //
+    //     // We do not attempt to reconstruct the appearance of the image, but
+    //     // only to provide access to the channels image data.
+    //     layer.Name = channelName;
+    //     layer.BlendModeKey = PsdBlendMode.Darken;
+    //     layer.Opacity = 255;
+    //
+    //     // Copy channel image data into the new grayscale layer
+    //     var layerChannel = new Channel(0, layer);
+    //     layerChannel.ImageCompression = channel.ImageCompression;
+    //     layerChannel.ImageData = channel.ImageData;
+    //     layer.Channels.Add(layerChannel);
+    //
+    //     psdFile.Layers.Add(layer);
+    //   }
+    // }
+    
     [Serializable]
-    public class PsdSaveConfigToken
+    private class PsdSaveConfigToken
     {
       public bool RleCompress { get; set; }
     }
 
-    public static void StoreLayer2(LoadPsdTest.LayerA layer, PhotoshopFile.Layer psdLayer, PsdSaveConfigToken psdToken)
+    private static void StoreLayer2(PsLayer psLayer, PhotoshopFile.Layer psdLayer, PsdSaveConfigToken psdToken)
     {
-      psdLayer.Name = layer.name;
-      psdLayer.Rect = layer.rect;
+      psdLayer.Name = psLayer.name;
+      psdLayer.Rect = psLayer.rect;
       psdLayer.BlendModeKey = PsdBlendMode.Normal;
       psdLayer.Opacity = 255;
       psdLayer.Visible = true;
       psdLayer.Masks = new MaskInfo();
       psdLayer.BlendingRangesData = new BlendingRanges(psdLayer);
 
-      if (layer.texture)
+      if (psLayer.texture)
       {
         // Store channel metadata
         int layerSize = (int) psdLayer.Rect.width * (int) psdLayer.Rect.height;
@@ -153,13 +202,13 @@ public class CreatePsdTest : MonoBehaviour
 
         // Store and compress channel image data
         var channelsArray = psdLayer.Channels.ToIdArray();
-        StoreLayerImage(channelsArray, psdLayer.AlphaChannel, layer.texture, psdLayer.Rect);
+        StoreLayerImage(channelsArray, psdLayer.AlphaChannel, psLayer.texture, psdLayer.Rect);
       }
 
-      if (layer.maskTexture)
+      if (psLayer.maskTexture)
       {
-        var layerMask = new Mask(psdLayer, layer.maskRect, Byte.MaxValue, new BitVector32(16));
-        var maskSize = layer.maskTexture.width * layer.maskTexture.height;
+        var layerMask = new Mask(psdLayer, psLayer.maskRect, Byte.MaxValue, new BitVector32(16));
+        var maskSize = psLayer.maskTexture.width * psLayer.maskTexture.height;
         psdLayer.Masks.LayerMask = layerMask;
         // layerMask.Rect = new Rect(0, 0, mask.width, mask.height);
         layerMask.PositionVsLayer = true;
@@ -171,11 +220,11 @@ public class CreatePsdTest : MonoBehaviour
         
         layerMask.ImageData = ch.ImageData; 
 
-        StoreMaskImage(ch, layer.maskTexture, layer.maskRect); 
+        StoreMaskImage(ch, psLayer.maskTexture, psLayer.maskRect); 
       }
     }
     
-    public static void StoreLayer(Texture2D layer, Texture2D mask,
+    private static void StoreLayer(Texture2D layer, Texture2D mask,
       PhotoshopFile.Layer psdLayer, PsdSaveConfigToken psdToken)
     {
       // Set layer metadata
@@ -320,101 +369,9 @@ public class CreatePsdTest : MonoBehaviour
       isCopy = true;
       return newTex;
     }
-
-
-    // [ContextMenu("Load File")]
-    // void LoadFile()
-    // {
-    //     var input = new FileStream(Application.dataPath + "/../testfile.psd", FileMode.Open);
-    //     var psdFile = new PsdFile(input, new LoadContext());
-    //     
-    //     // Multichannel images are loaded by processing each channel as a
-    //     // grayscale layer.
-    //     if (psdFile.ColorMode == PsdColorMode.Multichannel)
-    //     {
-    //         CreateLayersFromChannels(psdFile);
-    //         psdFile.ColorMode = PsdColorMode.Grayscale;
-    //     }
-    //     
-    //     if (psdFile.Layers.Count == 0)
-    //     {
-    //         psdFile.BaseLayer.CreateMissingChannels();
-    //         var layer = Layer.CreateBackgroundLayer(psdFile.ColumnCount, psdFile.RowCount);
-    //         ImageDecoderPdn.DecodeImage(layer, psdFile.BaseLayer);
-    //         document.Layers.Add(layer);
-    //     }
-    //     else
-    //     {
-    //         psdFile.VerifyLayerSections();
-    //         ApplyLayerSections(psdFile.Layers);
-    //     
-    //         var pdnLayers = psdFile.Layers.AsParallel().AsOrdered()
-    //             .Select(psdLayer => psdLayer.DecodeToPdnLayer())
-    //             .ToList();
-    //         document.Layers.AddRange(pdnLayers);
-    //     }
-    // }
-
-    /// <summary>
-    /// Creates a layer for each channel in a multichannel image.
-    /// </summary>
-    private static void CreateLayersFromChannels(PsdFile psdFile)
+    
+    private static string LayerDebug(int index, Layer layer)
     {
-      if (psdFile.ColorMode != PsdColorMode.Multichannel)
-      {
-        throw new Exception("Not a multichannel image.");
-      }
-      if (psdFile.Layers.Count > 0)
-      {
-        throw new PsdInvalidException("Multichannel image should not have layers.");
-      }
-
-      // Get alpha channel names, preferably in Unicode.
-      var alphaChannelNames = (AlphaChannelNames)psdFile.ImageResources
-        .Get(ResourceID.AlphaChannelNames);
-      var unicodeAlphaNames = (UnicodeAlphaNames)psdFile.ImageResources
-        .Get(ResourceID.UnicodeAlphaNames);
-      if ((alphaChannelNames == null) && (unicodeAlphaNames == null))
-      {
-        throw new PsdInvalidException("No channel names found.");
-      }
-
-      var channelNames = (unicodeAlphaNames != null)
-        ? unicodeAlphaNames.ChannelNames
-        : alphaChannelNames.ChannelNames;
-      var channels = psdFile.BaseLayer.Channels;
-      if (channels.Count > channelNames.Count)
-      {
-        throw new PsdInvalidException("More channels than channel names.");
-      }
-
-      // Channels are stored from top to bottom, but layers are stored from
-      // bottom to top.
-      for (int i = channels.Count - 1; i >= 0; i--)
-      {
-        var channel = channels[i];
-        var channelName = channelNames[i];
-
-        // Copy metadata over from base layer
-        var layer = new PhotoshopFile.Layer(psdFile);
-        layer.Rect = psdFile.BaseLayer.Rect;
-        layer.Visible = true;
-        layer.Masks = new MaskInfo();
-        layer.BlendingRangesData = new BlendingRanges(layer);
-
-        // We do not attempt to reconstruct the appearance of the image, but
-        // only to provide access to the channels image data.
-        layer.Name = channelName;
-        layer.BlendModeKey = PsdBlendMode.Darken;
-        layer.Opacity = 255;
-
-        // Copy channel image data into the new grayscale layer
-        var layerChannel = new Channel(0, layer);
-        layerChannel.ImageCompression = channel.ImageCompression;
-        layerChannel.ImageData = channel.ImageData;
-        layer.Channels.Add(layerChannel);
-
-        psdFile.Layers.Add(layer);
-      }
+      return "[Layer " + index + "] " + layer.Name + ": " + string.Join(", ", layer.AdditionalInfo.OfType<LayerSectionInfo>().Select(x => x.SectionType + " - " + x.Subtype));
     }
 }

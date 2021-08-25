@@ -12,11 +12,11 @@ public class PsdUIToolkit : MonoBehaviour
 {
     public VisualTreeAsset listItem;
 
-    static void AddLevels(LoadPsdTest.LayerA current, VisualElement parent, VisualTreeAsset listItem, VisualElement imageStack)
+    static void AddLevels(PsLayer current, VisualElement parent, VisualTreeAsset listItem, VisualElement imageStack)
     {
         if (!current) return;
-        if (current.layers == null) return;
-        foreach (var layer in current.layers)
+        if (current.childLayers == null) return;
+        foreach (var layer in current.childLayers)
         {
             var item = listItem.Instantiate();
             
@@ -46,31 +46,31 @@ public class PsdUIToolkit : MonoBehaviour
             
             parent.Add(item);
 
-            if (layer.layers.Any())
+            if (layer.childLayers.Any())
                 AddLevels(layer, item.Q<Foldout>(), listItem, imageStack);
             else
                 item.Q<Foldout>().style.display = DisplayStyle.None;
         }
     }
 
-    private static string GetExtraDetailsAsString(LoadPsdTest.LayerA layer)
+    private static string GetExtraDetailsAsString(PsLayer psLayer)
     {
-        if (layer.layer != null)
-            return string.Join("\n", layer.layer.AdditionalInfo.Select(x => x.Key + " [" + x.GetType() + "] = " + x.ToString()));
+        if (psLayer.originalLayerData != null)
+            return string.Join("\n", psLayer.originalLayerData.AdditionalInfo.Select(x => x.Key + " [" + x.GetType() + "] = " + x.ToString()));
         else
             return "(no serialized layer data)";
     }
 
-    public static void AddDoc(VisualElement root, LoadPsdTest.File file)
+    public static void AddDoc(VisualElement root, PsFile psFile)
     {
-        root.Q<Label>("filename").text = file.name;
+        root.Q<Label>("filename").text = psFile.name;
         var imageStack = root.Q("imageStack");
-        imageStack.style.width = file.rect.width;
-        imageStack.style.height = file.rect.height;
+        imageStack.style.width = psFile.rect.width;
+        imageStack.style.height = psFile.rect.height;
         imageStack.Clear();
         var scrollView = root.Q<ScrollView>("layerStack");
         scrollView.Clear();
         var listItem = GameObject.FindObjectOfType<PsdUIToolkit>().listItem;
-        AddLevels(file, scrollView, listItem, imageStack);
+        AddLevels(psFile, scrollView, listItem, imageStack);
     }
 }

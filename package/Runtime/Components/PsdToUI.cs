@@ -19,16 +19,16 @@ public class PsdToUI : MonoBehaviour
     void CreateNow()
     {
         Clear();
-
+    
         var t = GetComponent<LoadPsdTest>();
-
-        foreach (var l in t.file.layers)
+    
+        foreach (var l in t.psFile.childLayers)
         {
-            MakeLayer(t.file, l, root);
+            MakeLayer(t.psFile, l, root);
         }
     }
 
-    private void MakeLayer(LoadPsdTest.LayerA file, LoadPsdTest.LayerA layerA, Transform parent)
+    private void MakeLayer(PsLayer file, PsLayer psLayer, Transform parent)
     {
         void ApplyRectToTransform(Component c, Rect rect)
         {
@@ -41,29 +41,29 @@ public class PsdToUI : MonoBehaviour
         }
         
         RawImage maskGo = null;
-        if (layerA.maskTexture)
+        if (psLayer.maskTexture)
         {
-            maskGo = new GameObject(layerA.name + " (Mask)").AddComponent<RawImage>();
+            maskGo = new GameObject(psLayer.name + " (Mask)").AddComponent<RawImage>();
             maskGo.gameObject.hideFlags = HideFlags.DontSave;
-            ApplyRectToTransform(maskGo, layerA.maskRect);
+            ApplyRectToTransform(maskGo, psLayer.maskRect);
             maskGo.gameObject.AddComponent<Mask>();
-            maskGo.texture = layerA.maskTexture;
+            maskGo.texture = psLayer.maskTexture;
             maskGo.transform.SetParent(parent);
             maskGo.transform.SetAsFirstSibling();
         }
         
-        var go = new GameObject(layerA.name).AddComponent<RectTransform>();
+        var go = new GameObject(psLayer.name).AddComponent<RectTransform>();
         go.gameObject.hideFlags = HideFlags.DontSave;
-        ApplyRectToTransform(go, layerA.rect);
-        if (layerA.texture)
+        ApplyRectToTransform(go, psLayer.rect);
+        if (psLayer.texture)
         {
             var tex = go.gameObject.AddComponent<RawImage>();
-            tex.texture = layerA.texture;
+            tex.texture = psLayer.texture;
         }
         go.transform.SetParent(maskGo ? maskGo.transform : parent);
         go.transform.SetAsFirstSibling();
 
-        foreach (var child in layerA.layers)
+        foreach (var child in psLayer.childLayers)
         {
             MakeLayer(file, child, go.transform);
         }

@@ -1,7 +1,5 @@
 using System.IO;
 using System.Linq;
-using subjectnerdagreement.psdexport;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 #if HAVE_USFB
@@ -52,25 +50,24 @@ public class PsdPicker : MonoBehaviour
 
 	void ExportFile()
 	{
-		var path = StandaloneFileBrowser.SaveFilePanel("Save File", lastLoadPath, file.name + "-exported", "psd");
+		var path = StandaloneFileBrowser.SaveFilePanel("Save File", lastLoadPath, psFile.name + "-exported", "psd");
 		
 		if(!string.IsNullOrEmpty(path))
-			CreatePsdTest.CreateFile(file, path);
+			psFile.SaveTo(path);
 	}
 #endif
 	
 #if HAVE_UI_TOOLKIT
 
-	private LoadPsdTest.File file;
+	private PsFile psFile;
 
 	private string lastLoadPath;
 	void LoadPsdFile(string absolutePath)
 	{
-		var settings = new PsdExportSettings(absolutePath);
-		file = LoadPsdTest.Parse(settings.Psd);
-		file.name = Path.GetFileNameWithoutExtension(absolutePath);
+		psFile = PsFile.Load(absolutePath);
+		psFile.name = Path.GetFileNameWithoutExtension(absolutePath);
 		lastLoadPath = Path.GetDirectoryName(absolutePath);
-		PsdUIToolkit.AddDoc(fileRoot.rootVisualElement, file);
+		PsdUIToolkit.AddDoc(fileRoot.rootVisualElement, psFile);
 	}
 #endif
 }
