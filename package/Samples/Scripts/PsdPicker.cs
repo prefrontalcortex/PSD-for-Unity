@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using subjectnerdagreement.psdexport;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 #if HAVE_USFB
@@ -18,10 +19,8 @@ public class PsdPicker : MonoBehaviour
 #if HAVE_USFB
 	private void OnEnable()
 	{
-		picker.rootVisualElement.Q<Button>().clicked += () =>
-		{
-			PickFile();
-		};
+		picker.rootVisualElement.Q<Button>("import").clicked += PickFile;
+		picker.rootVisualElement.Q<Button>("export").clicked += ExportFile;
 		
 		// // mock hierarchy
 		// var scrollView = fileRoot.rootVisualElement.Q<ScrollView>();
@@ -43,26 +42,34 @@ public class PsdPicker : MonoBehaviour
 
 	void PickFile()
 	{
-		// Open file
 		var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", "psd", false);
-		if (paths.Length == 1)
-		{
-			var path = paths.FirstOrDefault();
-			if (!string.IsNullOrEmpty(path))
-			{
-				LoadPsdFile(path);
-			}
-		}
+		if (paths.Length != 1) return;
+		var path = paths.FirstOrDefault();
+		
+		if (!string.IsNullOrEmpty(path))
+			LoadPsdFile(path);
+	}
+
+	void ExportFile()
+	{
+		var path = StandaloneFileBrowser.SaveFilePanel("Save File", lastLoadPath, file.name + "-exported", "psd");
+		
+		if(!string.IsNullOrEmpty(path))
+			CreatePsdTest.CreateFile(file, path);
 	}
 #endif
 	
 #if HAVE_UI_TOOLKIT
+
+	private LoadPsdTest.File file;
+
+	private string lastLoadPath;
 	void LoadPsdFile(string absolutePath)
 	{
 		var settings = new PsdExportSettings(absolutePath);
-		var file = LoadPsdTest.Parse(settings.Psd);
+		file = LoadPsdTest.Parse(settings.Psd);
 		file.name = Path.GetFileNameWithoutExtension(absolutePath);
-
+		lastLoadPath = Path.GetDirectoryName(absolutePath);
 		PsdUIToolkit.AddDoc(fileRoot.rootVisualElement, file);
 	}
 #endif

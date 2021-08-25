@@ -63,10 +63,13 @@ public class PsdUIToolkit : MonoBehaviour
 
     public static void AddDoc(VisualElement root, LoadPsdTest.File file)
     {
+        root.Q<Label>("filename").text = file.name;
         var imageStack = root.Q("imageStack");
         imageStack.style.width = file.rect.width;
         imageStack.style.height = file.rect.height;
-        var scrollView = root.Q<ScrollView>();
+        imageStack.Clear();
+        var scrollView = root.Q<ScrollView>("layerStack");
+        scrollView.Clear();
         var listItem = GameObject.FindObjectOfType<PsdUIToolkit>().listItem;
         AddLevels(file, scrollView, listItem, imageStack);
     }

@@ -224,10 +224,13 @@ namespace PhotoshopFile
     public abstract string Key { get; }
 
     protected abstract void WriteData(PsdBinaryWriter writer);
+    protected abstract bool WriteSupported { get; }
 
     public void Save(PsdBinaryWriter writer, bool globalLayerInfo,
       bool isLargeDocument)
     {
+      if (!WriteSupported) return;
+      
       Util.DebugMessage(writer.BaseStream,
         $"Save, Begin, LayerInfo, {Signature}, {Key}");
 

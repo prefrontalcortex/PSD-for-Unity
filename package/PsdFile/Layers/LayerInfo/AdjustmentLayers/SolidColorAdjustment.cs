@@ -13,6 +13,12 @@ public class SolidColorAdjustment : AdjustmentLayerInfo
         Debug.Log("BEGIN " + Key + ", version: " + version);
         TypeToolObjectInfo.ReadDescriptor(reader, out var byteCount);
         Debug.Log("END " + Key + ", descriptor length: " + byteCount);
-
     }
+
+    protected override void WriteData(PsdBinaryWriter writer)
+    {
+        
+    }
+    
+    protected override bool WriteSupported => false;
 }

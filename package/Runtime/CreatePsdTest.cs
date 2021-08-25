@@ -17,9 +17,15 @@ public class CreatePsdTest : MonoBehaviour
     }
     
     public LoadPsdTest.File file;
-    
+
     [ContextMenu("Create File")]
-    void CreateFile()
+    void CreateFileContext()
+    {
+      var outputPath = Path.GetFullPath(Application.dataPath + "/../testfile.psd");
+      CreateFile(file, outputPath);
+    }
+    
+    public static void CreateFile(LoadPsdTest.File file, string outputPath)
     {
         var tex = new Texture2D((int) file.rect.width, (int) file.rect.height);
         tex.SetPixels(Enumerable.Repeat(new Color(1, 0, 0, 1), tex.width * tex.height).ToArray());
@@ -108,7 +114,6 @@ public class CreatePsdTest : MonoBehaviour
         storeCompositeAction();
         storeLayersAction();
 
-        var outputPath = Path.GetFullPath(Application.dataPath + "/../testfile.psd");
         using(var output = new FileStream(outputPath, FileMode.OpenOrCreate))
         {
           psdFile.PrepareSave();

@@ -3,8 +3,8 @@
         <ui:VisualElement name="textureLine" style="flex-direction: row; width: 20px;">
             <ui:Toggle name="visible" binding-path="visible" style="-unity-text-align: middle-left; width: 20px;" />
             <ui:Label text="Label" display-tooltip-when-elided="true" name="name" binding-path="name" enable-rich-text="false" style="width: 120px; -unity-text-align: middle-left; height: 64px;" />
-            <ui:Image name="image" style="height: 64px; width: 64px; max-width: 64px; max-height: 64px; min-height: 64px; min-width: 64px;" />
-            <ui:Image name="mask" style="height: 64px; width: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px; margin-left: 2px;" />
+            <ui:Image name="image" style="height: 64px; width: 64px; max-width: 64px; max-height: 64px; min-height: 64px; min-width: 64px; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgba(0, 0, 0, 0.33); border-right-color: rgba(0, 0, 0, 0.33); border-top-color: rgba(0, 0, 0, 0.33); border-bottom-color: rgba(0, 0, 0, 0.33);" />
+            <ui:Image name="mask" style="height: 64px; width: 64px; max-width: 64px; max-height: 64px; min-width: 64px; min-height: 64px; margin-left: 2px; border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-left-color: rgba(0, 0, 0, 0.33); border-right-color: rgba(0, 0, 0, 0.33); border-top-color: rgba(0, 0, 0, 0.33); border-bottom-color: rgba(0, 0, 0, 0.33);" />
             <ui:VisualElement name="rects" style="justify-content: center;">
                 <ui:Label text="Label" display-tooltip-when-elided="true" name="maskRect" style="-unity-text-align: middle-left;" />
                 <ui:Label text="Label" display-tooltip-when-elided="true" name="imageRect" style="-unity-text-align: middle-left;" />

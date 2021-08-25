@@ -11,8 +11,4 @@ public abstract class AdjustmentLayerInfo : LayerInfo
     {
         Debug.Log("AdjustmentLayer: " + Key + ", " + length + " bytes");
     }
-    
-    protected override void WriteData(PsdBinaryWriter writer)
-    {
-    }
 }

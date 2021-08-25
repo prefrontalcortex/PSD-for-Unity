@@ -11,6 +11,7 @@ public class TypeToolObjectInfo : LayerInfo
 {
     public override string Signature => "8BIM";
     public override string Key => "TySh";
+    protected override bool WriteSupported => false;
 
     public string text;
     public string classId;
@@ -205,8 +206,7 @@ public class TypeToolObjectInfo : LayerInfo
                     // string end marker: \r)
                     // 0D 29 (hex)
 
-                    // Interesting values to get text, font, size, color:
-                    
+                    //// Interesting values to get text, font, size, color:
                     // EngineDict.Editor.Text
                     // ParagraphRun.StyleRun.RunArray.StyleSheet.StyleSheetData.FontSize
                     //                                                         .FillColor.Values[]
@@ -220,7 +220,6 @@ public class TypeToolObjectInfo : LayerInfo
                     
                     var count = data.Length;
                     var dictionaryDepth = 0;
-                    var maxLogs = 100;
                     int c = 0;
                     for (c = 0; c < count - 2; c++)
                     {

@@ -16,4 +16,11 @@ public class BrightnessContrastAdjustment : AdjustmentLayerInfo
         
         Debug.Log(brightness + ", " + contrast + ", " + mean + ", " + lab);
     }
+
+    protected override void WriteData(PsdBinaryWriter writer)
+    {
+        
+    }
+    
+    protected override bool WriteSupported => false;
 }

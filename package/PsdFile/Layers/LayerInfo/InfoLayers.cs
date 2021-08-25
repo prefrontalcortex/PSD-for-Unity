@@ -30,6 +30,7 @@ namespace PhotoshopFile
 
     private string key;
     public override string Key => key;
+    protected override bool WriteSupported => true;
 
     public PsdFile PsdFile { get; set; }
 

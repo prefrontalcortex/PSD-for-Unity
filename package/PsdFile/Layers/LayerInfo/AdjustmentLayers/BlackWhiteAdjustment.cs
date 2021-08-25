@@ -14,4 +14,12 @@ public class BlackWhiteAdjustment : AdjustmentLayerInfo
         TypeToolObjectInfo.ReadDescriptor(reader, out var byteCount);
         Debug.Log("END " + Key + ", descriptor length: " + byteCount);
     }
+
+    protected override void WriteData(PsdBinaryWriter writer)
+    {
+        // writer.Write((int)16);
+        // TypeToolObjectInfo.WriteDescriptor(writer);
+    }
+
+    protected override bool WriteSupported => false;
 }

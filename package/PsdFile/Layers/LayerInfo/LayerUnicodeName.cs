@@ -17,6 +17,8 @@ namespace PhotoshopFile
     public override string Signature => "8BIM";
 
     public override string Key => "luni";
+    
+    protected override bool WriteSupported => true;
 
     public string Name { get; set; }
 

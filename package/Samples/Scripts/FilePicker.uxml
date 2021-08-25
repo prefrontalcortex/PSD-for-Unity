@@ -1,3 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Button text="Select File" display-tooltip-when-elided="true" focusable="true" />
+    <ui:VisualElement style="flex-direction: row;">
+        <ui:Button text="Open File" display-tooltip-when-elided="true" focusable="true" name="import" style="flex-grow: 1;" />
+        <ui:Button text="Save File" display-tooltip-when-elided="true" focusable="true" name="export" style="flex-grow: 1;" />
+    </ui:VisualElement>
 </ui:UXML>

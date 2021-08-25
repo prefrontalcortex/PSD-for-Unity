@@ -19,7 +19,7 @@ namespace PhotoshopFile
   {
     private string signature;
     public override string Signature => signature;
-
+    protected override bool WriteSupported => true;
     private string key;
     public override string Key => key;
 

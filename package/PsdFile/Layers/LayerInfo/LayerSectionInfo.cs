@@ -37,6 +37,7 @@ namespace PhotoshopFile
 
     private string key;
     public override string Key => key;
+    protected override bool WriteSupported => true;
 
     public LayerSectionType SectionType { get; set; }
 

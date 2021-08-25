@@ -27,4 +27,6 @@ public class MetadataLayerInfo : LayerInfo
     {
         
     }
+    
+    protected override bool WriteSupported => false;
 }

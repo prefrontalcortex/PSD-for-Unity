@@ -52,4 +52,11 @@ public class HueSaturationAdjustment : AdjustmentLayerInfo
         Debug.Log(sb);
         Debug.Log("END " + Key + ", descriptor length: ");
     }
+
+    protected override void WriteData(PsdBinaryWriter writer)
+    {
+        
+    }
+    
+    protected override bool WriteSupported => false;
 }
