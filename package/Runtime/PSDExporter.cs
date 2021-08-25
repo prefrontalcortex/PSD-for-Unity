@@ -156,7 +156,7 @@ namespace subjectnerdagreement.psdexport
 
 				int mod = i % tex.width;
 				int n = ((tex.width - mod - 1) + i) - mod;
-				pixels[pixels.Length - n - 1] = new Color32(0, 0, 0,r);
+				pixels[pixels.Length - n - 1] = new Color32(r, r, r,r); // TODO make configurable
 			}
 
 			tex.SetPixels32(pixels);

@@ -28,11 +28,20 @@ public class SheetColorLayerInfo : LayerInfo
     
     protected override void WriteData(PsdBinaryWriter writer)
     {
+        var startPosition = writer.BaseStream.Position;
+
+        // writer.WritePadding(startPosition, 4);
         writer.Write((byte)0);
         writer.Write((byte)colorId);
-        writer.WritePadding(2,8);
+        writer.WritePadding(startPosition,8);
     }
 
+    string Hex(Color color)
+    {
+        var c32 = (Color32) color;
+        return "#" + BitConverter.ToString(new byte[] { c32.r, c32.g, c32.b, c32.a }).Replace("-", string.Empty);
+    }
+    
     public SheetColorLayerInfo(PsdBinaryReader reader, int length)
     {
         var allBytes = reader.ReadBytes(length);
@@ -41,6 +50,6 @@ public class SheetColorLayerInfo : LayerInfo
         swap[0] = allBytes[1];
         swap[1] = allBytes[0];
         colorId = BitConverter.ToInt16(swap, 0);
-        Debug.Log(hexString);
+        Debug.Log("<color=" + Hex(colors[colorId]) + ">Layer Color: " + colorId + "</color> [" + hexString + "]");
     }
 }

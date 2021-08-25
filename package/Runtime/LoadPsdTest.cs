@@ -16,15 +16,19 @@ public class LoadPsdTest : MonoBehaviour
     [ContextMenu("Load Now")]
     void LoadNow()
     {
-	    var path = absolutePath;
+	    LoadFromPath(absolutePath);
+    }
+
+    public void LoadFromPath(string path)
+    {
 #if UNITY_EDITOR
 	    if (asset) path = UnityEditor.AssetDatabase.GetAssetPath(asset);
 #endif
-        var settings = new PsdExportSettings(path);
-        file = Parse(settings.Psd);
-        file.name = Path.GetFileNameWithoutExtension(path);
+	    var settings = new PsdExportSettings(path);
+	    file = Parse(settings.Psd);
+	    file.name = Path.GetFileNameWithoutExtension(path);
 
-        OnLoad?.Invoke(file);
+	    OnLoad?.Invoke(file);
     }
 
     [Serializable]

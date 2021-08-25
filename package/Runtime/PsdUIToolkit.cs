@@ -6,12 +6,13 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Random = System.Random;
 
 public class PsdUIToolkit : MonoBehaviour
 {
     public VisualTreeAsset listItem;
 
-    static void AddLevels(LoadPsdTest.LayerA current, VisualElement parent, VisualTreeAsset listItem)
+    static void AddLevels(LoadPsdTest.LayerA current, VisualElement parent, VisualTreeAsset listItem, VisualElement imageStack)
     {
         if (!current) return;
         if (current.layers == null) return;
@@ -27,11 +28,26 @@ public class PsdUIToolkit : MonoBehaviour
             item.Q<Label>("imageRect").text = layer.rect.ToString();
             item.Q<Image>("mask").image = layer.maskTexture;
             item.Q<Label>("maskRect").text = layer.maskRect.ToString();
-				
+
+            var elem = new Image()
+            {
+                style =
+                {
+                    width = layer.rect.width,
+                    height = layer.rect.height,
+                    position = Position.Absolute,
+                    marginLeft = layer.rect.xMin,
+                    marginTop = layer.rect.yMin,
+                    // backgroundColor = UnityEngine.Random.ColorHSV(0,1, 1,1,1,1,1,1),
+                },
+                image = layer.texture,
+            };
+            imageStack.Insert(0, elem);
+            
             parent.Add(item);
 
             if (layer.layers.Any())
-                AddLevels(layer, item.Q<Foldout>(), listItem);
+                AddLevels(layer, item.Q<Foldout>(), listItem, imageStack);
             else
                 item.Q<Foldout>().style.display = DisplayStyle.None;
         }
@@ -47,8 +63,11 @@ public class PsdUIToolkit : MonoBehaviour
 
     public static void AddDoc(VisualElement root, LoadPsdTest.File file)
     {
+        var imageStack = root.Q("imageStack");
+        imageStack.style.width = file.rect.width;
+        imageStack.style.height = file.rect.height;
         var scrollView = root.Q<ScrollView>();
         var listItem = GameObject.FindObjectOfType<PsdUIToolkit>().listItem;
-        AddLevels(file, scrollView, listItem);
+        AddLevels(file, scrollView, listItem, imageStack);
     }
 }

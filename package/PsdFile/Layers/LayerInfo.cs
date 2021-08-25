@@ -58,8 +58,7 @@ namespace PhotoshopFile
       var signature = reader.ReadAsciiChars(4);
       if ((signature != "8BIM") && (signature != "8B64"))
       {
-        throw new PsdInvalidException(
-          $"{nameof(LayerInfo)} signature invalid, must be 8BIM or 8B64.");
+        throw new PsdInvalidException($"{nameof(LayerInfo)} signature invalid, must be 8BIM or 8B64.");
       }
 
       var key = reader.ReadAsciiChars(4);
@@ -70,7 +69,8 @@ namespace PhotoshopFile
       var startPosition = reader.BaseStream.Position;
 
       LayerInfo result;
-      Debug.Log("Key: " + key + ", length: " + length);
+      // Debug.Log("Key: " + key + ", length: " + length);
+      
       // Adobe Docs for file format: https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
       switch (key)
       {

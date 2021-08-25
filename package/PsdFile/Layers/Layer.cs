@@ -19,6 +19,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace PhotoshopFile
 {

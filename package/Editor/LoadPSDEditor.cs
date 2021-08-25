@@ -10,6 +10,7 @@ public class LoadPSDEditor : Editor
 {
     public override VisualElement CreateInspectorGUI()
     {
+        var t = target as LoadPsdTest;
         var root = new VisualElement();
         
         // create base IMGUI inspector for stuff that's already there
@@ -36,7 +37,14 @@ public class LoadPSDEditor : Editor
 
             PsdUIToolkit.AddDoc(psdUi, t.file);
         }
+
+        void LoadAndBuildPsdUI()
+        {
+            t.LoadFromPath(t.absolutePath);
+            BuildPsdUI();
+        }
         
+        root.Add(new Button(LoadAndBuildPsdUI) { text = "Load & Build PSD UI" });
         root.Add(new Button(BuildPsdUI) { text = "Build PSD UI" });
         return root;
     }

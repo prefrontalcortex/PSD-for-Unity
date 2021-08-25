@@ -632,7 +632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5424e6e93ab9bfb45ac6bc087aa51598, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  asset: {fileID: 2800000, guid: 74c772ebe514801458bb1eed46a30f86, type: 3}
+  asset: {fileID: 2800000, guid: 0b29ee7cfd9888546b20cd922126ef40, type: 3}
   absolutePath: Packages/com.pfc.psd-shared-assets/Assets/Import/LayersAndMasks.psd
   OnLoad:
     m_PersistentCalls:

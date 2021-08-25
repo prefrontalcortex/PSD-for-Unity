@@ -72,6 +72,9 @@ public class CreatePsdTest : MonoBehaviour
             {
               var separatorLayer = new PhotoshopFile.Layer(psdFile);
               separatorLayer.AdditionalInfo.Add(new LayerSectionInfo(LayerSectionType.SectionDivider));
+              var infos = pdnLayer.layer?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo));
+              if(infos != null)
+                separatorLayer.AdditionalInfo.AddRange(infos);
               StoreLayer2(pdnLayer, separatorLayer, psdToken);
               return separatorLayer;
             }
@@ -79,12 +82,14 @@ public class CreatePsdTest : MonoBehaviour
             var psdLayer = new PhotoshopFile.Layer(psdFile);
             StoreLayer2(pdnLayer, psdLayer, psdToken);
 
-            // TODO proper layer sections
             var layerSectionType = LayerSectionType.Layer;
             if (pdnLayer.isGroup)
               layerSectionType = LayerSectionType.OpenFolder;
             
             psdLayer.AdditionalInfo.Add(new LayerSectionInfo(layerSectionType));
+            var infos2 = pdnLayer.layer?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo));
+            if(infos2 != null)
+              psdLayer.AdditionalInfo.AddRange(infos2);
             
             // progress.Notify(percentPerLayer);
             return psdLayer;
@@ -235,14 +240,16 @@ public class CreatePsdTest : MonoBehaviour
       
       for (int y = 0; y < (int) rect.height; y++)
       {
+        int srcRowIndex = ((int) rect.height - 1 - y) * (int) rect.width;
         int destRowIndex = y * (int) rect.width;
         // ColorBgra* srcRow = surface.GetRowAddress(y + rect.Top);
         // ColorBgra* srcPixel = srcRow + rect.Left;
         
         for (int x = 0; x < (int) rect.width; x++)
         {
+          int srcIndex = srcRowIndex + x;
           int destIndex = destRowIndex + x;
-          var srcPixel = colors[destIndex];
+          var srcPixel = colors[srcIndex];
 
           channels[0].ImageData[destIndex] = srcPixel.r;
           channels[1].ImageData[destIndex] = srcPixel.g;
@@ -258,22 +265,27 @@ public class CreatePsdTest : MonoBehaviour
 
     unsafe private static void StoreMaskImage(Channel maskChannel, Texture2D mask, Rect rect)
     {
+      // TODO GraphicsFormatUtility.ComponentCount etc. might be better suited here
+      int channelToUse = mask.format == TextureFormat.Alpha8 ? 3 : 0;
       mask = MakeTextureReadable(mask, out var isCopy);
       var colors = mask.GetPixels32();
       if (isCopy) DestroyImmediate(mask);
       
       for (int y = 0; y < (int) rect.height; y++)
       {
+        int srcRowIndex = ((int) rect.height - 1 - y) * (int) rect.width;
         int destRowIndex = y * (int) rect.width;
         // ColorBgra* srcRow = surface.GetRowAddress(y + rect.Top);
         // ColorBgra* srcPixel = srcRow + rect.Left;
         
         for (int x = 0; x < (int) rect.width; x++)
         {
+          int srcIndex = srcRowIndex + x;
           int destIndex = destRowIndex + x;
-          var srcPixel = colors[destIndex];
+          var srcPixel = colors[srcIndex];
 
-          maskChannel.ImageData[destIndex] = srcPixel.r;
+          // r channel or a channel?
+          maskChannel.ImageData[destIndex] = srcPixel[channelToUse];
         }
       }
       

@@ -19,7 +19,7 @@ public class MetadataLayerInfo : LayerInfo
             reader.ReadBytes(3); // padding
             var dataLength = reader.ReadInt32();
             reader.ReadBytes(dataLength);
-            Debug.Log("[" + nameof(MetadataLayerInfo) + "] " + "Signature: " + signature +", Key: " + key+ ", Undocumented bytes: " + dataLength);
+            // Debug.Log("[" + nameof(MetadataLayerInfo) + "] " + "Signature: " + signature +", Key: " + key+ ", Undocumented bytes: " + dataLength);
         }
     }
     
