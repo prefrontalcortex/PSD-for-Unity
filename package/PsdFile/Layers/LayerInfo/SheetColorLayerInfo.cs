@@ -50,8 +50,8 @@ public class SheetColorLayerInfo : LayerInfo
         swap[0] = allBytes[1];
         swap[1] = allBytes[0];
         colorId = BitConverter.ToInt16(swap, 0);
-        if(colorId != 0)
-            Debug.Log("<color=" + Hex(colors[colorId]) + ">Layer Color: " + colorId + "</color> [" + hexString + "]");
+        // if(colorId != 0)
+            // Debug.Log("<color=" + Hex(colors[colorId]) + ">Layer Color: " + colorId + "</color> [" + hexString + "]");
     }
     
     protected override bool WriteSupported => true;

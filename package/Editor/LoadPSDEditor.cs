@@ -1,12 +1,12 @@
 using UnityEditor;
 using UnityEngine.UIElements;
 
-[CustomEditor(typeof(LoadPsdTest))]
+[CustomEditor(typeof(LoadPsd))]
 public class LoadPSDEditor : Editor
 {
     public override VisualElement CreateInspectorGUI()
     {
-        var t = target as LoadPsdTest;
+        var t = target as LoadPsd;
         var root = new VisualElement();
         
         // create base IMGUI inspector for stuff that's already there
@@ -24,14 +24,14 @@ public class LoadPSDEditor : Editor
                 psdUi.RemoveFromHierarchy();
             
             // load PSD root visual tree asset
-            var path = "Packages/com.pfc.psd/Samples/Scripts/PsdFile.uxml";
+            var path = "Packages/com.pfc.psd/Samples/UI/PsdFile.uxml";
             var template = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(path);
             psdUi = template.Instantiate();
             root.Add(psdUi);
 
-            var t = target as LoadPsdTest;
+            var t = target as LoadPsd;
 
-            PsdUIToolkit.AddDoc(psdUi, t.psFile);
+            PsdUIToolkit.AddDoc(psdUi, t.file);
         }
 
         void LoadAndBuildPsdUI()

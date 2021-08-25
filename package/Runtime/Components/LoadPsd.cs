@@ -2,11 +2,11 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class LoadPsdTest : MonoBehaviour
+public class LoadPsd : MonoBehaviour
 {
 	public UnityEngine.Object asset;
     public string absolutePath;
-    public PsFile psFile;
+    public PsFile file;
     public UnityEvent<PsFile> OnLoad;
     
     [ContextMenu("Load Now")]
@@ -20,9 +20,9 @@ public class LoadPsdTest : MonoBehaviour
 #if UNITY_EDITOR
 	    if (asset) path = UnityEditor.AssetDatabase.GetAssetPath(asset);
 #endif
-	    psFile = PsFile.Load(path);
-	    psFile.name = Path.GetFileNameWithoutExtension(path);
+	    file = PsFile.Load(path);
+	    file.name = Path.GetFileNameWithoutExtension(path);
 
-	    OnLoad?.Invoke(psFile);
+	    OnLoad?.Invoke(file);
     }
 }

@@ -20,11 +20,11 @@ public class PsdToUI : MonoBehaviour
     {
         Clear();
     
-        var t = GetComponent<LoadPsdTest>();
+        var t = GetComponent<LoadPsd>();
     
-        foreach (var l in t.psFile.childLayers)
+        foreach (var l in t.file.childLayers)
         {
-            MakeLayer(t.psFile, l, root);
+            MakeLayer(t.file, l, root);
         }
     }
 

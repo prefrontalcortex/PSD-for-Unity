@@ -47,9 +47,9 @@ public class PsdUIToolkit : MonoBehaviour
             parent.Add(item);
 
             if (layer.childLayers.Any())
-                AddLevels(layer, item.Q<Foldout>(), listItem, imageStack);
+                AddLevels(layer, item.Q<Foldout>("childLayers"), listItem, imageStack);
             else
-                item.Q<Foldout>().style.display = DisplayStyle.None;
+                item.Q<Foldout>("childLayers").style.display = DisplayStyle.None;
         }
     }
 

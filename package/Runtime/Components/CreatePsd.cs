@@ -1,19 +1,19 @@
 using System.IO;
 using UnityEngine;
 
-public class CreatePsdTest : MonoBehaviour
+public class CreatePsd : MonoBehaviour
 {
     public void SetFile(PsFile psFile)
     {
-      this.psFile = psFile;
+      this.file = psFile;
     }
     
-    public PsFile psFile;
+    public PsFile file;
 
     [ContextMenu("Create File")]
     void CreateFileContext()
     {
       var outputPath = Path.GetFullPath(Application.dataPath + "/../testfile.psd");
-      psFile.SaveTo(outputPath);
+      file.SaveTo(outputPath);
     }
 }
