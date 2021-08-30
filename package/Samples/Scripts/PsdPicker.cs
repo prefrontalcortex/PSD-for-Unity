@@ -14,7 +14,7 @@ public class PsdPicker : MonoBehaviour
 	public VisualTreeAsset listItem;
 #endif
 	
-#if HAVE_USFB
+#if HAVE_USFB && HAVE_UI_TOOLKIT
 	private void OnEnable()
 	{
 		picker.rootVisualElement.Q<Button>("import").clicked += PickFile;

@@ -12,6 +12,14 @@ public class PsdUIToolkit : MonoBehaviour
 {
     public VisualTreeAsset listItem;
 
+    static Color GetColorFromLayer(PsLayer layer)
+    {
+        var colorLayerInfo = layer.originalLayerData?.AdditionalInfo?.OfType<SheetColorLayerInfo>().FirstOrDefault();
+        if (colorLayerInfo == null)
+            return new Color(1, 1, 1, 0);
+        return colorLayerInfo.Color;
+    }
+    
     static void AddLevels(PsLayer current, VisualElement parent, VisualTreeAsset listItem, VisualElement imageStack)
     {
         if (!current) return;
@@ -19,7 +27,7 @@ public class PsdUIToolkit : MonoBehaviour
         foreach (var layer in current.childLayers)
         {
             var item = listItem.Instantiate();
-            
+            item.Q("layerSettings").style.borderLeftColor = GetColorFromLayer(layer);
             // item.Bind(new SerializedObject(layer));
             item.Q<Label>("name").text = layer.name;
             item.Q<Label>("extra").text = GetExtraDetailsAsString(layer);
