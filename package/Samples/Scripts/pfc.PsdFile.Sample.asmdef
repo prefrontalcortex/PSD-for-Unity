@@ -1,5 +1,5 @@
 {
-    "name": "Needle.PsdFile.Sample",
+    "name": "pfc.PsdFile.Sample",
     "rootNamespace": "",
     "references": [
         "GUID:b9b45bb934e52e94ba4ae0c70d70f248",

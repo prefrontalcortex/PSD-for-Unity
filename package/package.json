@@ -1,5 +1,14 @@
 {
     "name":"com.pfc.psd",
-    "version": "1.0.0",
-    "displayName": "PSD Import/Export"
+    "version": "0.3.0-exp",
+    "displayName": "PSD Import/Export",
+    "author": {
+        "email": "contact@prefrontalcortex.de",
+        "name": "prefrontal cortex"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/prefrontalcortex/PSD-for-Unity"
+    },
+    "private": true
 }
