@@ -24,6 +24,7 @@ public static class PsReader
 			layerA.originalLayerData = layer;
 			layerA.visible = layer.Visible;
 			layerA.rect = layer.Rect;
+			layerA.opacity = layer.Opacity / 255f;
 			layerA.maskRect = layer.Masks.LayerMask?.Rect ?? Rect.zero;
 
 			// layerVisibility.Add(layer.Visible);
@@ -48,6 +49,11 @@ public static class PsReader
 						break;
 				}
 			}
+			
+			// get the layer color if there's a SheetColorLayerInfo available
+			var layerColorInfo = layer.AdditionalInfo.OfType<SheetColorLayerInfo>().FirstOrDefault();
+			if (layerColorInfo != null)
+				layerA.layerColor = (PsLayer.LayerColor) layerColorInfo.layerColor;
 
 			if (isGroup)
 			{

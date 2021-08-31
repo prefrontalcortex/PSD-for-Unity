@@ -15,7 +15,7 @@ public class PsWriter : MonoBehaviour
     internal static void CreateFile(PsFile psFile, string outputPath)
     {
         var tex = new Texture2D((int) psFile.rect.width, (int) psFile.rect.height);
-        tex.SetPixels(Enumerable.Repeat(new Color(1, 0, 0, 1), tex.width * tex.height).ToArray());
+        tex.SetPixels(Enumerable.Repeat(new Color(1, 1, 1, 1), tex.width * tex.height).ToArray());
         tex.Apply();
       
         var psdFile = new PsdFile(PsdFileVersion.Psd);
@@ -44,6 +44,14 @@ public class PsWriter : MonoBehaviour
             psdFile.BaseLayer.Channels.Add(channel);
           }
 
+          // if the main entry point has a texture assigned, use that as composite image if dimensions match
+          if (psFile.texture)
+          {
+            if(psFile.texture.width == (int) psFile.rect.width && psFile.texture.height == (int) psFile.rect.height)
+              tex = psFile.texture;
+            else
+              Debug.LogWarning($"Composite image is assigned to {psFile} but dimensions don't match: Expected {psFile.rect.width}x{psFile.rect.height} but image dimensions are {psFile.texture.width}x{psFile.texture.height}, won't store composite image.", psFile);
+          }
           var channelsArray = psdFile.BaseLayer.Channels.ToIdArray();
           StoreLayerImage(channelsArray, channelsArray[3],
             tex, psdFile.BaseLayer.Rect);
@@ -73,14 +81,17 @@ public class PsWriter : MonoBehaviour
             }
 
             var psdLayer = new PhotoshopFile.Layer(psdFile);
+            psdLayer.Visible = pdnLayer.visible;
             StoreLayer2(pdnLayer, psdLayer, psdToken);
 
             var layerSectionType = LayerSectionType.Layer;
             if (pdnLayer.isGroup)
               layerSectionType = LayerSectionType.OpenFolder;
             
+            if(pdnLayer.layerColor != PsLayer.LayerColor.NoColor)
+              psdLayer.AdditionalInfo.Add(new SheetColorLayerInfo((SheetColorLayerInfo.LayerColor) pdnLayer.layerColor));
             psdLayer.AdditionalInfo.Add(new LayerSectionInfo(layerSectionType));
-            var infos2 = pdnLayer.originalLayerData?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo));
+            var infos2 = pdnLayer.originalLayerData?.AdditionalInfo?.Where(x => !(x is LayerSectionInfo || x is SheetColorLayerInfo));
             if(infos2 != null)
               psdLayer.AdditionalInfo.AddRange(infos2);
             
@@ -183,8 +194,8 @@ public class PsWriter : MonoBehaviour
       psdLayer.Name = psLayer.name;
       psdLayer.Rect = psLayer.rect;
       psdLayer.BlendModeKey = PsdBlendMode.Normal;
-      psdLayer.Opacity = 255;
-      psdLayer.Visible = true;
+      psdLayer.Opacity = (byte) Mathf.RoundToInt(Mathf.Clamp01(psLayer.opacity) * 255f);
+      psdLayer.Visible = psLayer.visible;
       psdLayer.Masks = new MaskInfo();
       psdLayer.BlendingRangesData = new BlendingRanges(psdLayer);
 

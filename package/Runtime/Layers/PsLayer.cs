@@ -7,16 +7,35 @@ using UnityEngine;
 [Serializable]
 public class PsLayer : ScriptableObject
 {
-    public bool visible;
-    public bool isGroup;
+    public bool visible = true;
+    public bool isGroup = false;
+    [Range(0,1)]
+    public float opacity = 1;
+    public LayerColor layerColor;
+
     public Texture2D texture;
-    public Texture2D maskTexture;
     public Rect rect;
+    
+    public Texture2D maskTexture;
     public Rect maskRect;
+    
     public PsLayer parent;
-    public Layer originalLayerData;
     public List<PsLayer> childLayers = new List<PsLayer>();
 
+    public Layer originalLayerData;
+    
+    public enum LayerColor
+    {
+        NoColor,
+        Red,
+        Orange,
+        Yellow,
+        Green,
+        Blue, 
+        Violet, 
+        Gray
+    }
+    
     public IEnumerable<PsLayer> FlattenedLayersWithGroupDividers
     {
         get

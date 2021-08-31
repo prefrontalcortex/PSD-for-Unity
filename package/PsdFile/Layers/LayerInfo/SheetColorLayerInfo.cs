@@ -6,9 +6,8 @@ public class SheetColorLayerInfo : LayerInfo
 {
     public override string Signature => "8BIM";
     public override string Key => "lclr";
-    public int colorId = 0;
-    public Color color;
-    public override string ToString() => $"[{nameof(SheetColorLayerInfo)}] {colorId}={Color.ToString()}";
+    public LayerColor layerColor;
+    public override string ToString() => $"[{nameof(SheetColorLayerInfo)}] {layerColor}={Color.ToString()}";
     public string hexString;
 
     // Ps Layer Colors
@@ -24,7 +23,19 @@ public class SheetColorLayerInfo : LayerInfo
         new Color(0.5f, 0.5f, 0.5f, 1f),
     };
 
-    public Color Color => colors[colorId];
+    public enum LayerColor
+    {
+        NoColor,
+        Red,
+        Orange,
+        Yellow,
+        Green,
+        Blue, 
+        Violet, 
+        Gray
+    }
+    
+    public Color Color => colors[(int)layerColor];
     
     protected override void WriteData(PsdBinaryWriter writer)
     {
@@ -32,7 +43,7 @@ public class SheetColorLayerInfo : LayerInfo
 
         // writer.WritePadding(startPosition, 4);
         writer.Write((byte)0);
-        writer.Write((byte)colorId);
+        writer.Write((byte)(int)layerColor);
         writer.WritePadding(startPosition,8);
     }
 
@@ -49,9 +60,19 @@ public class SheetColorLayerInfo : LayerInfo
         var swap = new byte[2];
         swap[0] = allBytes[1];
         swap[1] = allBytes[0];
-        colorId = BitConverter.ToInt16(swap, 0);
+        var colorIndex = BitConverter.ToInt16(swap, 0);
+        if (colorIndex >= 0 && colorIndex < colors.Length)
+            layerColor = (LayerColor)colorIndex;
+        else
+            layerColor = LayerColor.NoColor; // unknown color id
+        
         // if(colorId != 0)
-            // Debug.Log("<color=" + Hex(colors[colorId]) + ">Layer Color: " + colorId + "</color> [" + hexString + "]");
+        // Debug.Log("<color=" + Hex(colors[colorId]) + ">Layer Color: " + colorId + "</color> [" + hexString + "]");
+    }
+
+    public SheetColorLayerInfo(LayerColor color)
+    {
+        this.layerColor = color;
     }
     
     protected override bool WriteSupported => true;
